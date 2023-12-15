@@ -1,3 +1,4 @@
+/* eslint-disable no-mixed-spaces-and-tabs */
 import { useFormAction, useNavigation } from '@remix-run/react'
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -43,7 +44,7 @@ export function cn(...inputs: ClassValue[]) {
  * @throws {Response} if condition is falsey
  */
 export function invariantResponse(
-	condition: any,
+	condition: unknown,
 	message?: string | (() => string),
 	responseInit?: ResponseInit,
 ): asserts condition {

@@ -1,3 +1,4 @@
+/* eslint-disable no-mixed-spaces-and-tabs */
 import {
 	isRouteErrorResponse,
 	useParams,
@@ -37,7 +38,7 @@ export function GeneralErrorBoundary({
 				? (statusHandlers?.[error.status] ?? defaultStatusHandler)({
 						error,
 						params,
-					})
+			 })
 				: unexpectedErrorHandler(error)}
 		</div>
 	)

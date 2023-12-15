@@ -1,15 +1,9 @@
 import { json, type DataFunctionArgs } from '@remix-run/node'
-import {
-	Link,
-	useLoaderData,
-	useRouteError,
-	type MetaFunction,
-} from '@remix-run/react'
+import { Link, useLoaderData, type MetaFunction } from '@remix-run/react'
+import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { db } from '~/utils/db.server'
-import { invariantResponse } from '~/utils/misc'
 
 export async function loader({ params }: DataFunctionArgs) {
-	// throw new Error('😨 Loader error')
 	const user = db.user.findFirst({
 		where: {
 			username: {
@@ -17,19 +11,18 @@ export async function loader({ params }: DataFunctionArgs) {
 			},
 		},
 	})
-
-	invariantResponse(user, 'User not found', { status: 404 })
-
+	if (!user) {
+		throw new Response('User not found', { status: 404 })
+	}
 	return json({
 		user: { name: user.name, username: user.username },
 	})
 }
 
 export default function ProfileRoute() {
-	// throw new Error('😨 Component error')
 	const data = useLoaderData<typeof loader>()
 	return (
-		<div className="container mb-48 mt-6">
+		<div className="container mb-48 mt-36">
 			<h1 className="text-h1">{data.user.name ?? data.user.username}</h1>
 			<Link to="notes" className="underline" prefetch="intent">
 				Notes
@@ -50,12 +43,13 @@ export const meta: MetaFunction<typeof loader> = ({ data, params }) => {
 }
 
 export function ErrorBoundary() {
-	const error = useRouteError()
-	console.error(error)
-
 	return (
-		<div className="container mx-auto flex h-full w-full items-center justify-center bg-destructive p-20 text-h2 text-destructive-foreground">
-			<p>Oh no, something went wrong. Sorry about that.</p>
-		</div>
+		<GeneralErrorBoundary
+			statusHandlers={{
+				404: ({ params }) => (
+					<p>No user with the username &quot;{params.username}&quot; exists</p>
+				),
+			}}
+		/>
 	)
 }

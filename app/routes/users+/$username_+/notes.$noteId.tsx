@@ -1,5 +1,6 @@
 import { json, redirect, type DataFunctionArgs } from '@remix-run/node'
 import { Form, Link, useLoaderData, type MetaFunction } from '@remix-run/react'
+import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { floatingToolbarClassName } from '~/components/floating-toolbar'
 import { Button } from '~/components/ui/button'
 import { db } from '~/utils/db.server'
@@ -14,15 +15,17 @@ export async function loader({ params }: DataFunctionArgs) {
 			},
 		},
 	})
-
-	invariantResponse(note, 'Note not found', { status: 404 })
-
+	if (!note) {
+		throw new Response('Note note found', { status: 404 })
+	}
 	return json({
 		note: { title: note.title, content: note.content },
 	})
 }
 
 export async function action({ request, params }: DataFunctionArgs) {
+	invariantResponse(params.noteId, 'noteId param is required')
+
 	const formData = await request.formData()
 	const intent = formData.get('intent')
 
@@ -44,7 +47,7 @@ export default function NoteRoute() {
 				</p>
 			</div>
 			<div className={floatingToolbarClassName}>
-				<Form method="POST">
+				<Form method="post">
 					<Button
 						type="submit"
 						variant="destructive"
@@ -82,4 +85,16 @@ export const meta: MetaFunction<
 			content: noteContentsSummary,
 		},
 	]
+}
+
+export function ErrorBoundary() {
+	return (
+		<GeneralErrorBoundary
+			statusHandlers={{
+				404: ({ params }) => (
+					<p>No note with the id {params.noteId} exists</p>
+				),
+			}}
+		/>
+	)
 }
