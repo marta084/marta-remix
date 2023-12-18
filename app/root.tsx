@@ -1,28 +1,31 @@
 import os from 'node:os'
 import { cssBundleHref } from '@remix-run/css-bundle'
-import { json, type LinksFunction } from '@remix-run/node'
+import { json, type LinksFunction, type MetaFunction } from '@remix-run/node'
 import {
-	Link,
 	Links,
 	LiveReload,
 	Meta,
 	Outlet,
 	Scripts,
 	ScrollRestoration,
-	useLoaderData,
-	type MetaFunction,
 } from '@remix-run/react'
-import faviconAssetUrl from '~/assets/favicon.svg'
-import { GeneralErrorBoundary } from '~/components/error-boundary'
-import fontStylestylesheetUrl from '~/styles/font.css'
-import tailwindStylesheetUrl from '~/styles/tailwind.css'
-import { getEnv } from '~/utils/env.server'
+import MartaBlogFavicon from './assets/favicon.ico'
+import { GeneralErrorBoundary } from './components/error-boundary'
+
+// icon, styles, components
+import tailwindStyleSheet from './styles/tailwind.css'
+import globalStyleSheet from './styles/global.css'
+import fontStyleSheet from './styles/font.css'
+import Footer from './components/footer'
+import Header from './components/header'
+import { getEnv } from './utils/env.server'
 
 export const links: LinksFunction = () => {
 	return [
-		{ rel: 'icon', type: 'image/svg+xml', href: faviconAssetUrl },
-		{ rel: 'stylesheet', href: fontStylestylesheetUrl },
-		{ rel: 'stylesheet', href: tailwindStylesheetUrl },
+		{ rel: 'icon', href: MartaBlogFavicon, type: 'image/x-icon' },
+		{ rel: 'stylesheet', href: tailwindStyleSheet },
+		{ rel: 'stylesheet', href: globalStyleSheet },
+		{ rel: 'stylesheet', href: fontStyleSheet },
 		cssBundleHref ? { rel: 'stylesheet', href: cssBundleHref } : null,
 	].filter(Boolean)
 }
@@ -37,10 +40,10 @@ function Document({ children }: { children: React.ReactNode }) {
 			<head>
 				<Meta />
 				<meta charSet="utf-8" />
-				<meta name="viewport" content="width=device-width,initial-scale=1" />
+				<meta name="viewport" content="width=device-width, initial-scale=1" />
 				<Links />
 			</head>
-			<body className="flex h-full flex-col justify-between bg-background text-foreground">
+			<body className="max-w-3xl mx-auto bg-gray-100 flex flex-col w-full h-full">
 				{children}
 				<ScrollRestoration />
 				<Scripts />
@@ -51,55 +54,29 @@ function Document({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-	const data = useLoaderData<typeof loader>()
 	return (
 		<Document>
-			<header className="container mx-auto py-6">
-				<nav className="flex justify-between">
-					<Link to="/">
-						<div className="font-light">epic</div>
-						<div className="font-bold">notes</div>
-					</Link>
-					<Link className="underline" to="/users/kody/notes/d27a197e/edit">
-						Edit Kodys first note
-					</Link>
-				</nav>
-			</header>
-
-			<div className="flex-1">
-				<Outlet />
-			</div>
-
-			<div className="container mx-auto flex justify-between">
-				<Link to="/">
-					<div className="font-light">epic</div>
-					<div className="font-bold">notes</div>
-				</Link>
-				<p>Built with ♥️ by {data.username}</p>
-			</div>
-			<div className="h-5" />
-			<script
-				dangerouslySetInnerHTML={{
-					__html: `window.ENV = ${JSON.stringify(data.ENV)}`,
-				}}
-			/>
+			<Header />
+			<Outlet />
+			<Footer />
 		</Document>
 	)
 }
 
 export const meta: MetaFunction = () => {
 	return [
-		{ title: 'Epic Notes' },
-		{ name: 'description', content: `Your own captain's log` },
+		{ title: 'Marta Blog' },
+		{
+			name: 'description',
+			description: 'Marta Blog',
+		},
 	]
 }
 
 export function ErrorBoundary() {
 	return (
 		<Document>
-			<div className="flex-1">
-				<GeneralErrorBoundary />
-			</div>
+			<GeneralErrorBoundary />
 		</Document>
 	)
 }

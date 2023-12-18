@@ -45,8 +45,8 @@ export const db = singleton('db', () => {
 	const kody = db.user.create({
 		id: '9d6eba59daa2fc2078cf8205cd451041',
 		email: 'kody@kcd.dev',
-		username: 'kody',
-		name: 'Kody',
+		username: 'marta',
+		name: 'Marta',
 	})
 
 	const kodyNotes = [
@@ -190,7 +190,7 @@ export async function updateNote({
 		data: {
 			title,
 			content,
-			images: noteImages.filter(Boolean),
+			images: noteImages.filter(Boolean) as never,
 		},
 	})
 }

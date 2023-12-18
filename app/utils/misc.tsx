@@ -1,4 +1,3 @@
-/* eslint-disable no-mixed-spaces-and-tabs */
 import { useFormAction, useNavigation } from '@remix-run/react'
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -44,7 +43,7 @@ export function cn(...inputs: ClassValue[]) {
  * @throws {Response} if condition is falsey
  */
 export function invariantResponse(
-	condition: unknown,
+	condition: any,
 	message?: string | (() => string),
 	responseInit?: ResponseInit,
 ): asserts condition {
@@ -53,7 +52,7 @@ export function invariantResponse(
 			typeof message === 'function'
 				? message()
 				: message ||
-				  'An invariant failed, please provide a message to explain why.',
+					'An invariant failed, please provide a message to explain why.',
 			{ status: 400, ...responseInit },
 		)
 	}
