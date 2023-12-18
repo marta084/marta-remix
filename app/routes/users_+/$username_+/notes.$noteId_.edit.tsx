@@ -26,6 +26,13 @@ export async function loader({ params }: DataFunctionArgs) {
 	})
 }
 
+type ActionErrors = {
+	formErrors: Array<string>
+	fieldErrors: {
+		title: Array<string>
+		content: Array<string>
+	}
+}
 const titleMaxLength = 100
 const contentMaxLength = 10000
 
@@ -38,11 +45,11 @@ export async function action({ params, request }: DataFunctionArgs) {
 	invariantResponse(typeof title === 'string', 'title must be a string')
 	invariantResponse(typeof content === 'string', 'content must be a string')
 
-	const errors = {
-		formErrors: [] as Array<string>,
+	const errors: ActionErrors = {
+		formErrors: [],
 		fieldErrors: {
-			title: [] as Array<string>,
-			content: [] as Array<string>,
+			title: [],
+			content: [],
 		},
 	}
 	if (title === '') {
@@ -67,6 +74,7 @@ export async function action({ params, request }: DataFunctionArgs) {
 	if (hasErrors) {
 		return json({ status: 'error', errors } as const, { status: 400 })
 	}
+
 	await updateNote({ id: params.noteId, title, content })
 
 	return redirect(`/users/${params.username}/notes/${params.noteId}`)
@@ -133,23 +141,29 @@ export default function SingleNoteEdit() {
 				<ErrorList errors={formErrors} />
 			</Form>
 			<div>
-				<Button
-					className="bg-gray-500 text-white hover:bg-gray-400"
-					variant="destructive"
-					type="reset"
-				>
-					{/* 🦉 NOTE: this button doesn't work right now, we'll get to that in the accessibility exercise */}
-					Reset
-				</Button>
-				<StatusButton
-					form={formId}
-					className="bg-gray-900 text-white hover:bg-gray-700"
-					type="submit"
-					disabled={isSubmitting}
-					status={isSubmitting ? 'pending' : 'idle'}
-				>
-					Submit
-				</StatusButton>
+				<div className="mt-4 ml-8 w-48 flex justify-between">
+					<div>
+						<Button
+							className="bg-gray-500 text-white hover:bg-gray-400"
+							variant="destructive"
+							type="reset"
+							form={formId}
+						>
+							Reset
+						</Button>
+					</div>
+					<div>
+						<StatusButton
+							form={formId}
+							className="bg-gray-900 text-white hover:bg-gray-700"
+							type="submit"
+							disabled={isSubmitting}
+							status={isSubmitting ? 'pending' : 'idle'}
+						>
+							Submit
+						</StatusButton>
+					</div>
+				</div>
 			</div>
 		</div>
 	)
