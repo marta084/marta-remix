@@ -1,6 +1,11 @@
 import os from 'node:os'
 import { cssBundleHref } from '@remix-run/css-bundle'
-import { json, type LinksFunction, type MetaFunction } from '@remix-run/node'
+import {
+	type DataFunctionArgs,
+	json,
+	type LinksFunction,
+	type MetaFunction,
+} from '@remix-run/node'
 import {
 	Links,
 	LiveReload,
@@ -8,30 +13,39 @@ import {
 	Outlet,
 	Scripts,
 	ScrollRestoration,
+	useLoaderData,
 } from '@remix-run/react'
+import { HoneypotProvider } from 'remix-utils/honeypot/react'
+import { AuthenticityTokenProvider } from 'remix-utils/csrf/react'
 import MartaBlogFavicon from './assets/favicon.ico'
-import { GeneralErrorBoundary } from './components/error-boundary'
+import { GeneralErrorBoundary } from './components/error-boundary.tsx'
+import { csrf } from '~/utils/csrf.server.ts'
 
 // icon, styles, components
 import tailwindStyleSheet from './styles/tailwind.css'
-import globalStyleSheet from './styles/global.css'
-import fontStyleSheet from './styles/font.css'
-import Footer from './components/footer'
-import Header from './components/header'
-import { getEnv } from './utils/env.server'
+import './styles/global.css'
+import Footer from './components/footer.tsx'
+import Header from './components/header.tsx'
+import { getEnv } from './utils/env.server.ts'
+import { honeypot } from './utils/honeypot.server.ts'
 
 export const links: LinksFunction = () => {
 	return [
 		{ rel: 'icon', href: MartaBlogFavicon, type: 'image/x-icon' },
 		{ rel: 'stylesheet', href: tailwindStyleSheet },
-		{ rel: 'stylesheet', href: globalStyleSheet },
-		{ rel: 'stylesheet', href: fontStyleSheet },
 		cssBundleHref ? { rel: 'stylesheet', href: cssBundleHref } : null,
 	].filter(Boolean)
 }
 
-export async function loader() {
-	return json({ username: os.userInfo().username, ENV: getEnv() })
+export async function loader({ request }: DataFunctionArgs) {
+	const honeyProps = honeypot.getInputProps()
+	const [csrfToken, csrfCookieHeader] = await csrf.commitToken(request)
+	return json(
+		{ username: os.userInfo().username, ENV: getEnv(), honeyProps, csrfToken },
+		{
+			headers: csrfCookieHeader ? { 'set-cookie': csrfCookieHeader } : {},
+		},
+	)
 }
 
 function Document({ children }: { children: React.ReactNode }) {
@@ -53,13 +67,24 @@ function Document({ children }: { children: React.ReactNode }) {
 	)
 }
 
-export default function App() {
+function App() {
 	return (
 		<Document>
 			<Header />
 			<Outlet />
 			<Footer />
 		</Document>
+	)
+}
+
+export default function AppWithProviders() {
+	const data = useLoaderData<typeof loader>()
+	return (
+		<AuthenticityTokenProvider token={data.csrfToken}>
+			<HoneypotProvider {...data.honeyProps}>
+				<App />
+			</HoneypotProvider>
+		</AuthenticityTokenProvider>
 	)
 }
 

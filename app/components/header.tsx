@@ -8,7 +8,9 @@ export default function Header() {
 					<Link to="/">Marta Blog</Link>
 				</h1>
 				<div>
-					<Link to="/users/kody/">Kody profile</Link>
+					<Link className="underline" to="/signup">
+						Singup
+					</Link>
 				</div>
 			</div>
 		</header>

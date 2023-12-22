@@ -11,12 +11,15 @@ import {
 	useLoaderData,
 	useNavigation,
 } from '@remix-run/react'
-import { GeneralErrorBoundary } from '~/components/error-boundary'
-import { Button } from '~/components/ui/button'
-import { StatusButton } from '~/components/ui/status-button'
-import { db } from '~/utils/db.server'
-import { invariantResponse } from '~/utils/misc'
-import { type loader as NoteLoader } from './notes'
+import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
+import { CSRFError } from 'remix-utils/csrf/server'
+import { csrf } from '~/utils/csrf.server.ts'
+import { GeneralErrorBoundary } from '~/components/error-boundary.tsx'
+import { Button } from '~/components/ui/button.tsx'
+import { StatusButton } from '~/components/ui/status-button.tsx'
+import { db } from '~/utils/db.server.ts'
+import { invariantResponse } from '~/utils/misc.tsx'
+import { type loader as NoteLoader } from './notes.tsx'
 
 export async function loader({ params }: DataFunctionArgs) {
 	const { noteId } = params
@@ -37,6 +40,16 @@ export async function loader({ params }: DataFunctionArgs) {
 
 export async function action({ params, request }: DataFunctionArgs) {
 	const formData = await request.formData()
+
+	try {
+		await csrf.validate(formData, request.headers)
+	} catch (error) {
+		if (error instanceof CSRFError) {
+			throw new Response('Invalid CSRF token', { status: 403 })
+		}
+		throw error
+	}
+
 	const intent = formData.get('intent')
 	switch (intent) {
 		case 'delete': {
@@ -77,6 +90,7 @@ export default function SingleNoteRoute() {
 					</div>
 					<div>
 						<Form method="POST">
+							<AuthenticityTokenInput />
 							<StatusButton
 								className="px-6 bg-red-800 text-gray-100 rounded-lg"
 								type="submit"

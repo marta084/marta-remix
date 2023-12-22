@@ -1,7 +1,7 @@
 import { json, type DataFunctionArgs, type MetaFunction } from '@remix-run/node'
 import { Link, NavLink, Outlet, useLoaderData } from '@remix-run/react'
-import { db } from '~/utils/db.server'
-import { cn, invariantResponse } from '~/utils/misc'
+import { db } from '~/utils/db.server.ts'
+import { cn } from '~/utils/misc.tsx'
 
 export async function loader({ params }: DataFunctionArgs) {
 	const owner = db.user.findFirst({
@@ -11,27 +11,21 @@ export async function loader({ params }: DataFunctionArgs) {
 			},
 		},
 	})
-
-	invariantResponse(owner, 'Owner not found', { status: 404 })
-
+	if (!owner) {
+		throw new Response('Owner not found', { status: 404 })
+	}
 	const notes = db.note
 		.findMany({
 			where: {
 				owner: {
 					username: {
-						equals: 'marta',
+						equals: params.username,
 					},
 				},
 			},
 		})
 		.map(({ id, title }) => ({ id, title }))
-	return json({
-		owner: {
-			name: owner.name,
-			username: owner.username,
-		},
-		notes,
-	})
+	return json({ owner, notes })
 }
 
 export default function NotesRoute() {

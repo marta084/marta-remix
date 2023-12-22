@@ -8,7 +8,7 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { factory, manyOf, nullable, oneOf, primaryKey } from '@mswjs/data'
-import { singleton } from '~/utils/singleton.server'
+import { singleton } from './singleton.server.ts'
 
 const getId = () => crypto.randomBytes(16).toString('hex').slice(0, 8)
 
@@ -46,7 +46,7 @@ export const db = singleton('db', () => {
 		id: '9d6eba59daa2fc2078cf8205cd451041',
 		email: 'kody@kcd.dev',
 		username: 'marta',
-		name: 'Marta',
+		name: 'marta',
 	})
 
 	const kodyNotes = [
@@ -66,7 +66,7 @@ export const db = singleton('db', () => {
 			id: '260366b1',
 			title: 'Not bears',
 			content:
-				"Although you may have heard people call them koala 'bears', these awesome animals arenâ€™t bears at all â€“ they are in fact marsupials. A group of mammals, most marsupials have pouches where their newborns develop.",
+				"Although you may have heard people call them koala 'bears', these awesome animals aren’t bears at all – they are in fact marsupials. A group of mammals, most marsupials have pouches where their newborns develop.",
 		},
 		{
 			id: 'bb79cf45',
@@ -108,7 +108,7 @@ export const db = singleton('db', () => {
 			id: 'f375a804',
 			title: 'Code Jam Success',
 			content:
-				'Participated in a coding competition today and secured the first place! The adrenaline, the challenging problems, and the satisfaction of finding optimal solutionsâ€”it was an amazing experience. Feeling proud and motivated to keep pushing my coding skills further!',
+				'Participated in a coding competition today and secured the first place! The adrenaline, the challenging problems, and the satisfaction of finding optimal solutions—it was an amazing experience. Feeling proud and motivated to keep pushing my coding skills further!',
 		},
 		{
 			id: '562c541b',
@@ -190,7 +190,7 @@ export async function updateNote({
 		data: {
 			title,
 			content,
-			images: noteImages.filter(Boolean) as never,
+			images: noteImages.filter(Boolean),
 		},
 	})
 }
