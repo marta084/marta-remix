@@ -1,31 +1,20 @@
 import { json, type DataFunctionArgs, type MetaFunction } from '@remix-run/node'
 import { Link, NavLink, Outlet, useLoaderData } from '@remix-run/react'
-import { db } from '~/utils/db.server.ts'
-import { cn } from '~/utils/misc.tsx'
+import { prisma } from '~/utils/db.server.ts'
+import { cn, invariantResponse } from '~/utils/misc.tsx'
 
 export async function loader({ params }: DataFunctionArgs) {
-	const owner = db.user.findFirst({
-		where: {
-			username: {
-				equals: params.username,
-			},
+	const owner = await prisma.user.findFirst({
+		select: {
+			name: true,
+			username: true,
+			image: { select: { id: true } },
+			notes: { select: { id: true, title: true } },
 		},
+		where: { username: params.username },
 	})
-	if (!owner) {
-		throw new Response('Owner not found', { status: 404 })
-	}
-	const notes = db.note
-		.findMany({
-			where: {
-				owner: {
-					username: {
-						equals: params.username,
-					},
-				},
-			},
-		})
-		.map(({ id, title }) => ({ id, title }))
-	return json({ owner, notes })
+	invariantResponse(owner, 'User not found', { status: 404 })
+	return json({ owner })
 }
 
 export default function NotesRoute() {
@@ -50,7 +39,7 @@ export default function NotesRoute() {
 			<div className="grid w-full grid-cols-4 bg-muted pl-2 md:container md:rounded-3xl md:pr-0">
 				<div className="relative col-span-1 border-2 mr-2 border-gray-450">
 					<ul className="overflow-y-auto overflow-x-hidden pb-12">
-						{data.notes.map(note => (
+						{data.owner.notes.map(note => (
 							<li key={note.id} className="m-1 p-4 border-2 border-gray-300">
 								<NavLink
 									to={note.id}

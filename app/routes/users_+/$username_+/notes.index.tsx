@@ -18,7 +18,7 @@ export const meta: MetaFunction<
 	)
 
 	const displayName = NoteMatch?.data.owner.name ?? params.username
-	const noteCount = NoteMatch?.data.notes.length ?? 0
+	const noteCount = NoteMatch?.data.owner.notes.length ?? 0
 	const notesText = noteCount === 1 ? 'note' : 'notes'
 
 	return [

@@ -7,6 +7,7 @@ import {
 	type FieldConfig,
 } from '@conform-to/react'
 import { getFieldsetConstraint, parse } from '@conform-to/zod'
+import { createId as cuid } from '@paralleldrive/cuid2'
 import {
 	unstable_createMemoryUploadHandler as createMemoryUploadHandler,
 	json,
@@ -16,37 +17,45 @@ import {
 } from '@remix-run/node'
 import { Form, useActionData, useLoaderData } from '@remix-run/react'
 import { useRef, useState } from 'react'
+import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { z } from 'zod'
 import { GeneralErrorBoundary } from '~/components/error-boundary.tsx'
+import { floatingToolbarClassName } from '~/components/floating-toolbar.tsx'
+import { ErrorList, Field, TextareaField } from '~/components/forms.tsx'
 import { Button } from '~/components/ui/button.tsx'
-import { Input } from '~/components/ui/input.tsx'
+import { Icon } from '~/components/ui/icon.tsx'
 import { Label } from '~/components/ui/label.tsx'
 import { StatusButton } from '~/components/ui/status-button.tsx'
 import { Textarea } from '~/components/ui/textarea.tsx'
-import { db, updateNote } from '~/utils/db.server.ts'
-import { cn, invariantResponse, useIsSubmitting } from '~/utils/misc.tsx'
+import { validateCSRF } from '~/utils/csrf.server.ts'
+import { prisma } from '~/utils/db.server.ts'
+import {
+	cn,
+	getNoteImgSrc,
+	invariantResponse,
+	useIsPending,
+} from '~/utils/misc.tsx'
 
 export async function loader({ params }: DataFunctionArgs) {
-	const note = db.note.findFirst({
-		where: {
-			id: {
-				equals: params.noteId,
+	const note = await prisma.note.findFirst({
+		where: { id: params.noteId },
+		select: {
+			title: true,
+			content: true,
+			images: {
+				select: { id: true, altText: true },
 			},
 		},
 	})
-	if (!note) {
-		throw new Response('Note not found', { status: 404 })
-	}
-	return json({
-		note: {
-			title: note.title,
-			content: note.content,
-			images: note.images.map(i => ({ id: i.id, altText: i.altText })),
-		},
-	})
+
+	invariantResponse(note, 'Note not found', { status: 404 })
+
+	return json({ note })
 }
 
+const titleMinLength = 1
 const titleMaxLength = 100
+const contentMinLength = 1
 const contentMaxLength = 10000
 
 const MAX_UPLOAD_SIZE = 1024 * 1024 * 3 // 3MB
@@ -55,17 +64,31 @@ const ImageFieldsetSchema = z.object({
 	id: z.string().optional(),
 	file: z
 		.instanceof(File)
+		.optional()
 		.refine(file => {
-			return file.size <= MAX_UPLOAD_SIZE
-		}, 'File size must be less than 3MB')
-		.optional(),
+			return !file || file.size <= MAX_UPLOAD_SIZE
+		}, 'File size must be less than 3MB'),
 	altText: z.string().optional(),
 })
 
+type ImageFieldset = z.infer<typeof ImageFieldsetSchema>
+
+function imageHasFile(
+	image: ImageFieldset,
+): image is ImageFieldset & { file: NonNullable<ImageFieldset['file']> } {
+	return Boolean(image.file?.size && image.file?.size > 0)
+}
+
+function imageHasId(
+	image: ImageFieldset,
+): image is ImageFieldset & { id: NonNullable<ImageFieldset['id']> } {
+	return image.id != null
+}
+
 const NoteEditorSchema = z.object({
-	title: z.string().max(titleMaxLength),
-	content: z.string().max(contentMaxLength),
-	images: z.array(ImageFieldsetSchema),
+	title: z.string().min(titleMinLength).max(titleMaxLength),
+	content: z.string().min(contentMinLength).max(contentMaxLength),
+	images: z.array(ImageFieldsetSchema).max(5).optional(),
 })
 
 export async function action({ request, params }: DataFunctionArgs) {
@@ -75,9 +98,41 @@ export async function action({ request, params }: DataFunctionArgs) {
 		request,
 		createMemoryUploadHandler({ maxPartSize: MAX_UPLOAD_SIZE }),
 	)
+	await validateCSRF(formData, request.headers)
 
-	const submission = parse(formData, {
-		schema: NoteEditorSchema,
+	const submission = await parse(formData, {
+		schema: NoteEditorSchema.transform(async ({ images = [], ...data }) => {
+			return {
+				...data,
+				imageUpdates: await Promise.all(
+					images.filter(imageHasId).map(async i => {
+						if (imageHasFile(i)) {
+							return {
+								id: i.id,
+								altText: i.altText,
+								contentType: i.file.type,
+								blob: Buffer.from(await i.file.arrayBuffer()),
+							}
+						} else {
+							return { id: i.id, altText: i.altText }
+						}
+					}),
+				),
+				newImages: await Promise.all(
+					images
+						.filter(imageHasFile)
+						.filter(i => !i.id)
+						.map(async image => {
+							return {
+								altText: image.altText,
+								contentType: image.file.type,
+								blob: Buffer.from(await image.file.arrayBuffer()),
+							}
+						}),
+				),
+			}
+		}),
+		async: true,
 	})
 
 	if (submission.intent !== 'submit') {
@@ -85,38 +140,35 @@ export async function action({ request, params }: DataFunctionArgs) {
 	}
 
 	if (!submission.value) {
-		return json({ status: 'error', submission } as const, {
-			status: 400,
-		})
+		return json({ status: 'error', submission } as const, { status: 400 })
 	}
-	const { title, content, images } = submission.value
-	await updateNote({ id: params.noteId, title, content, images })
+
+	const { title, content, imageUpdates = [], newImages = [] } = submission.value
+
+	await prisma.note.update({
+		select: { id: true },
+		where: { id: params.noteId },
+		data: {
+			title,
+			content,
+			images: {
+				deleteMany: { id: { notIn: imageUpdates.map(i => i.id) } },
+				updateMany: imageUpdates.map(updates => ({
+					where: { id: updates.id },
+					data: { ...updates, id: updates.blob ? cuid() : updates.id },
+				})),
+				create: newImages,
+			},
+		},
+	})
 
 	return redirect(`/users/${params.username}/notes/${params.noteId}`)
-}
-
-function ErrorList({
-	id,
-	errors,
-}: {
-	id?: string
-	errors?: Array<string> | null
-}) {
-	return errors?.length ? (
-		<ul id={id} className="flex flex-col gap-1">
-			{errors.map((error, i) => (
-				<li key={i} className="text-[10px] text-foreground-destructive">
-					{error}
-				</li>
-			))}
-		</ul>
-	) : null
 }
 
 export default function NoteEdit() {
 	const data = useLoaderData<typeof loader>()
 	const actionData = useActionData<typeof action>()
-	const isSubmitting = useIsSubmitting()
+	const isPending = useIsPending()
 
 	const [form, fields] = useForm({
 		id: 'note-editor',
@@ -134,40 +186,36 @@ export default function NoteEdit() {
 	const imageList = useFieldList(form.ref, fields.images)
 
 	return (
-		<div>
-			<h1 className="text-lg font-semibold mb-4 mx-8">Edit Post</h1>
-
+		<div className="absolute inset-0">
 			<Form
 				method="post"
-				className="flex h-full text-lg flex-col gap-y-4 overflow-x-hidden px-8 "
+				className="flex h-full flex-col gap-y-4 overflow-y-auto overflow-x-hidden px-10 pb-28 pt-12"
 				{...form.props}
 				encType="multipart/form-data"
 			>
+				<AuthenticityTokenInput />
+				{/*
+					This hidden submit button is here to ensure that when the user hits
+					"enter" on an input field, the primary form function is submitted
+					rather than the first button in the form (which is delete/add image).
+				*/}
 				<button type="submit" className="hidden" />
 				<div className="flex flex-col gap-1">
-					<div>
-						<Label htmlFor={fields.title.id}>Title</Label>
-						<Input className="text-black" {...conform.input(fields.title)} />
-						<div className="min-h-[32px] px-4 pb-3 pt-1">
-							<ErrorList
-								id={fields.title.errorId}
-								errors={fields.title.errors}
-							/>
-						</div>
-					</div>
-					<div>
-						<Label htmlFor={fields.content.id}>Content</Label>
-						<Textarea
-							className="text-black"
-							{...conform.textarea(fields.content)}
-						/>
-						<div className="min-h-[32px] px-4 pb-3 pt-1">
-							<ErrorList
-								id={fields.content.errorId}
-								errors={fields.content.errors}
-							/>
-						</div>
-					</div>
+					<Field
+						labelProps={{ children: 'Title' }}
+						inputProps={{
+							autoFocus: true,
+							...conform.input(fields.title),
+						}}
+						errors={fields.title.errors}
+					/>
+					<TextareaField
+						labelProps={{ children: 'Content' }}
+						textareaProps={{
+							...conform.textarea(fields.content),
+						}}
+						errors={fields.content.errors}
+					/>
 					<div>
 						<Label>Images</Label>
 						<ul className="flex flex-col gap-4">
@@ -180,7 +228,9 @@ export default function NoteEdit() {
 										className="text-foreground-destructive absolute right-0 top-0"
 										{...list.remove(fields.images.name, { index })}
 									>
-										<span aria-hidden>?</span>{' '}
+										<span aria-hidden>
+											<Icon name="cross-1" />
+										</span>{' '}
 										<span className="sr-only">Remove image {index + 1}</span>
 									</button>
 									<ImageChooser config={image} />
@@ -192,36 +242,26 @@ export default function NoteEdit() {
 						className="mt-3"
 						{...list.insert(fields.images.name, { defaultValue: {} })}
 					>
-						<span aria-hidden>? Image</span>{' '}
+						<span aria-hidden>
+							<Icon name="plus">Image</Icon>
+						</span>{' '}
 						<span className="sr-only">Add image</span>
 					</Button>
 				</div>
 				<ErrorList id={form.errorId} errors={form.errors} />
 			</Form>
-			<div>
-				<div className="mt-4 ml-8 w-48 flex justify-between">
-					<div>
-						<Button
-							form={form.id}
-							className="bg-gray-500 text-white hover:bg-gray-400"
-							variant="destructive"
-							type="reset"
-						>
-							Reset
-						</Button>
-					</div>
-					<div>
-						<StatusButton
-							form={form.id}
-							className="bg-gray-900 text-white hover:bg-gray-700"
-							type="submit"
-							disabled={isSubmitting}
-							status={isSubmitting ? 'pending' : 'idle'}
-						>
-							Submit
-						</StatusButton>
-					</div>
-				</div>
+			<div className={floatingToolbarClassName}>
+				<Button form={form.id} variant="destructive" type="reset">
+					Reset
+				</Button>
+				<StatusButton
+					form={form.id}
+					type="submit"
+					disabled={isPending}
+					status={isPending ? 'pending' : 'idle'}
+				>
+					Submit
+				</StatusButton>
 			</div>
 		</div>
 	)
@@ -236,12 +276,16 @@ function ImageChooser({
 	const fields = useFieldset(ref, config)
 	const existingImage = Boolean(fields.id.defaultValue)
 	const [previewImage, setPreviewImage] = useState<string | null>(
-		existingImage ? `/resources/images/${fields.id.defaultValue}` : null,
+		fields.id.defaultValue ? getNoteImgSrc(fields.id.defaultValue) : null,
 	)
 	const [altText, setAltText] = useState(fields.altText.defaultValue ?? '')
 
 	return (
-		<fieldset ref={ref} {...conform.fieldset(config)}>
+		<fieldset
+			ref={ref}
+			aria-invalid={Boolean(config.errors?.length) || undefined}
+			aria-describedby={config.errors?.length ? config.errorId : undefined}
+		>
 			<div className="flex gap-3">
 				<div className="w-32">
 					<div className="relative h-32 w-32">
@@ -268,15 +312,11 @@ function ImageChooser({
 								</div>
 							) : (
 								<div className="flex h-32 w-32 items-center justify-center rounded-lg border border-muted-foreground text-4xl text-muted-foreground">
-									?
+									<Icon name="plus" />
 								</div>
 							)}
 							{existingImage ? (
-								<input
-									{...conform.input(fields.id, {
-										type: 'hidden',
-									})}
-								/>
+								<input {...conform.input(fields.id, { type: 'hidden' })} />
 							) : null}
 							<input
 								aria-label="Image"
@@ -295,9 +335,7 @@ function ImageChooser({
 									}
 								}}
 								accept="image/*"
-								{...conform.input(fields.file, {
-									type: 'file',
-								})}
+								{...conform.input(fields.file, { type: 'file' })}
 							/>
 						</label>
 					</div>
@@ -330,7 +368,9 @@ export function ErrorBoundary() {
 	return (
 		<GeneralErrorBoundary
 			statusHandlers={{
-				404: ({ params }) => <p>No note with the id {params.noteId} exists</p>,
+				404: ({ params }) => (
+					<p>No note with the id "{params.noteId}" exists</p>
+				),
 			}}
 		/>
 	)

@@ -4,72 +4,50 @@ import {
 	type MetaFunction,
 	redirect,
 } from '@remix-run/node'
-import {
-	Form,
-	Link,
-	useFormAction,
-	useLoaderData,
-	useNavigation,
-} from '@remix-run/react'
+import { Form, Link, useLoaderData } from '@remix-run/react'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
-import { CSRFError } from 'remix-utils/csrf/server'
-import { csrf } from '~/utils/csrf.server.ts'
+import { validateCSRF } from '~/utils/csrf.server.ts'
 import { GeneralErrorBoundary } from '~/components/error-boundary.tsx'
 import { Button } from '~/components/ui/button.tsx'
 import { StatusButton } from '~/components/ui/status-button.tsx'
-import { db } from '~/utils/db.server.ts'
-import { invariantResponse } from '~/utils/misc.tsx'
+import { prisma } from '~/utils/db.server.ts'
+import { invariantResponse, useIsPending } from '~/utils/misc.tsx'
 import { type loader as NoteLoader } from './notes.tsx'
 
 export async function loader({ params }: DataFunctionArgs) {
-	const { noteId } = params
-	const note = db.note.findFirst({
-		where: {
-			id: { equals: noteId },
+	const note = await prisma.note.findFirst({
+		where: { id: params.noteId },
+		select: {
+			title: true,
+			content: true,
+			images: {
+				select: { id: true, altText: true },
+			},
 		},
 	})
 
 	invariantResponse(note, 'Note not found', { status: 404 })
 	return json({
-		note: {
-			title: note.title,
-			content: note.content,
-		},
+		note,
 	})
 }
 
-export async function action({ params, request }: DataFunctionArgs) {
+export async function action({ request, params }: DataFunctionArgs) {
+	invariantResponse(params.noteId, 'noteId param is required')
+
 	const formData = await request.formData()
-
-	try {
-		await csrf.validate(formData, request.headers)
-	} catch (error) {
-		if (error instanceof CSRFError) {
-			throw new Response('Invalid CSRF token', { status: 403 })
-		}
-		throw error
-	}
-
+	await validateCSRF(formData, request.headers)
 	const intent = formData.get('intent')
-	switch (intent) {
-		case 'delete': {
-			db.note.delete({ where: { id: { equals: params.noteId } } })
-			return redirect(`/users/${params.username}/notes`)
-		}
-		default: {
-			throw new Response(`Invalid intent: ${intent}`, { status: 400 })
-		}
-	}
+
+	invariantResponse(intent === 'delete', 'Invalid intent')
+
+	await prisma.note.delete({ where: { id: params.noteId } })
+	return redirect(`/users/${params.username}/notes`)
 }
 
 export default function SingleNoteRoute() {
 	const data = useLoaderData<typeof loader>()
-	const navigation = useNavigation()
-	const formAction = useFormAction()
-	const isPending =
-		navigation.state !== 'idle' &&
-		navigation.formAction === formAction &&
-		navigation.formMethod === 'POST'
+	const isPending = useIsPending()
 
 	return (
 		<div className=" flex-col px-8">

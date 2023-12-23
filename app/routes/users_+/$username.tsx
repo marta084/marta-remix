@@ -1,23 +1,25 @@
 import { json, type DataFunctionArgs, type MetaFunction } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
 import { GeneralErrorBoundary } from '~/components/error-boundary.tsx'
-import { db } from '~/utils/db.server.ts'
+import { prisma } from '~/utils/db.server.ts'
 import { invariantResponse } from '~/utils/misc.tsx'
 
 export async function loader({ params }: DataFunctionArgs) {
-	const { username } = params
-	const user = db.user.findFirst({
+	const user = await prisma.user.findFirst({
+		select: {
+			name: true,
+			username: true,
+			createdAt: true,
+			image: { select: { id: true } },
+		},
 		where: {
-			username: { equals: username },
+			username: params.username,
 		},
 	})
+
 	invariantResponse(user, 'User not found', { status: 404 })
-	return json({
-		user: {
-			name: user.name,
-			username: user.username,
-		},
-	})
+
+	return json({ user, userJoinedDisplay: user.createdAt.toLocaleDateString() })
 }
 
 export default function UserRoute() {
