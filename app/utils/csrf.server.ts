@@ -1,12 +1,13 @@
 import { createCookie } from '@remix-run/node'
 import { CSRF, CSRFError } from 'remix-utils/csrf/server'
 
+const SESSION_SECRET = 'hello-this-is-secret'
 const cookie = createCookie('csrf', {
 	path: '/',
 	httpOnly: true,
 	secure: process.env.NODE_ENV === 'production',
 	sameSite: 'lax',
-	secrets: process.env.SESSION_SECRET.split(','),
+	secrets: SESSION_SECRET.split(','),
 })
 
 export const csrf = new CSRF({ cookie })

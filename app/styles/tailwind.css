@@ -78,3 +78,7 @@
 		--ring: 217.2 32.6% 60%;
 	}
 }
+textarea,
+input {
+	@apply text-black;
+}

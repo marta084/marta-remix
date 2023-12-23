@@ -186,7 +186,7 @@ export default function NoteEdit() {
 	const imageList = useFieldList(form.ref, fields.images)
 
 	return (
-		<div className="absolute inset-0">
+		<div>
 			<Form
 				method="post"
 				className="flex h-full flex-col gap-y-4 overflow-y-auto overflow-x-hidden px-10 pb-28 pt-12"
@@ -205,6 +205,7 @@ export default function NoteEdit() {
 						labelProps={{ children: 'Title' }}
 						inputProps={{
 							autoFocus: true,
+							className: 'text-black',
 							...conform.input(fields.title),
 						}}
 						errors={fields.title.errors}
@@ -212,6 +213,7 @@ export default function NoteEdit() {
 					<TextareaField
 						labelProps={{ children: 'Content' }}
 						textareaProps={{
+							className: 'text-black',
 							...conform.textarea(fields.content),
 						}}
 						errors={fields.content.errors}
@@ -244,7 +246,7 @@ export default function NoteEdit() {
 					>
 						<span aria-hidden>
 							<Icon name="plus">Image</Icon>
-						</span>{' '}
+						</span>
 						<span className="sr-only">Add image</span>
 					</Button>
 				</div>
@@ -368,9 +370,7 @@ export function ErrorBoundary() {
 	return (
 		<GeneralErrorBoundary
 			statusHandlers={{
-				404: ({ params }) => (
-					<p>No note with the id "{params.noteId}" exists</p>
-				),
+				404: ({ params }) => <p>No note with the id {params.noteId} exists</p>,
 			}}
 		/>
 	)
