@@ -4,11 +4,11 @@ import {
 	type MetaFunction,
 } from '@remix-run/node'
 import { Form } from '@remix-run/react'
-import { Button } from '~/components/ui/button.tsx'
-import { Input } from '~/components/ui/input.tsx'
-import { Label } from '~/components/ui/label.tsx'
+import { Button } from '~/components/ui/button'
+import { Input } from '~/components/ui/input'
+import { Label } from '~/components/ui/label'
 import { HoneypotInputs } from 'remix-utils/honeypot/react'
-import { checkHoneypot } from '~/utils/honeypot.server.ts'
+import { checkHoneypot } from '~/utils/honeypot.server'
 
 export async function action({ request }: DataFunctionArgs) {
 	const formData = await request.formData()

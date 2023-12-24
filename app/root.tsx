@@ -18,16 +18,16 @@ import {
 import { HoneypotProvider } from 'remix-utils/honeypot/react'
 import { AuthenticityTokenProvider } from 'remix-utils/csrf/react'
 import MartaBlogFavicon from './assets/favicon.ico'
-import { GeneralErrorBoundary } from './components/error-boundary.tsx'
-import { csrf } from '~/utils/csrf.server.ts'
+import { GeneralErrorBoundary } from './components/error-boundary'
+import { csrf } from '~/utils/csrf.server'
 
 // icon, styles, components
 import tailwindStyleSheet from './styles/tailwind.css'
 import './styles/global.css'
-import Footer from './components/footer.tsx'
-import Header from './components/header.tsx'
-import { getEnv } from './utils/env.server.ts'
-import { honeypot } from './utils/honeypot.server.ts'
+import Footer from './components/footer'
+import Header from './components/header'
+import { getEnv } from './utils/env.server'
+import { honeypot } from './utils/honeypot.server'
 
 export const links: LinksFunction = () => {
 	return [

@@ -1,30 +1,22 @@
 {
-  "include": ["remix.env.d.ts", "**/*.ts", "**/*.tsx"],
+  "include": ["types/*.ts", "**/*.ts", "**/*.tsx"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "isolatedModules": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
+    "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "target": "ES2022",
     "strict": true,
-    "noImplicitAny": true,
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
       "~/*": ["./app/*"]
     },
-    "skipLibCheck": true,
-    "allowImportingTsExtensions": true,
-    "noEmit": true,
 
-    // Referenced project must have setting "composite": true.
-    "composite": true,
-    "disableReferencedProjectLoad": true,
-    "disableSolutionSearching": true,
-    "disableSourceOfProjectReferenceRedirect": true
+    // Remix takes care of building everything in `remix build`.
+    "noEmit": true
   }
 }

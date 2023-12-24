@@ -19,22 +19,22 @@ import { Form, useActionData, useLoaderData } from '@remix-run/react'
 import { useRef, useState } from 'react'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { z } from 'zod'
-import { GeneralErrorBoundary } from '~/components/error-boundary.tsx'
-import { floatingToolbarClassName } from '~/components/floating-toolbar.tsx'
-import { ErrorList, Field, TextareaField } from '~/components/forms.tsx'
-import { Button } from '~/components/ui/button.tsx'
-import { Icon } from '~/components/ui/icon.tsx'
-import { Label } from '~/components/ui/label.tsx'
-import { StatusButton } from '~/components/ui/status-button.tsx'
-import { Textarea } from '~/components/ui/textarea.tsx'
-import { validateCSRF } from '~/utils/csrf.server.ts'
-import { prisma } from '~/utils/db.server.ts'
+import { GeneralErrorBoundary } from '~/components/error-boundary'
+import { floatingToolbarClassName } from '~/components/floating-toolbar'
+import { ErrorList, Field, TextareaField } from '~/components/forms'
+import { Button } from '~/components/ui/button'
+import { Icon } from '~/components/ui/icon'
+import { Label } from '~/components/ui/label'
+import { StatusButton } from '~/components/ui/status-button'
+import { Textarea } from '~/components/ui/textarea'
+import { validateCSRF } from '~/utils/csrf.server'
+import { prisma } from '~/utils/db.server'
 import {
 	cn,
 	getNoteImgSrc,
 	invariantResponse,
 	useIsPending,
-} from '~/utils/misc.tsx'
+} from '~/utils/misc'
 
 export async function loader({ params }: DataFunctionArgs) {
 	const note = await prisma.note.findFirst({
@@ -189,7 +189,7 @@ export default function NoteEdit() {
 		<div>
 			<Form
 				method="post"
-				className="flex h-full flex-col gap-y-4 overflow-y-auto overflow-x-hidden px-10 pb-28 pt-12"
+				className="flex h-full flex-col gap-y-4 "
 				{...form.props}
 				encType="multipart/form-data"
 			>

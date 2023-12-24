@@ -1,7 +1,7 @@
 import { json, type DataFunctionArgs, type MetaFunction } from '@remix-run/node'
 import { Link, NavLink, Outlet, useLoaderData } from '@remix-run/react'
-import { prisma } from '~/utils/db.server.ts'
-import { cn, invariantResponse } from '~/utils/misc.tsx'
+import { prisma } from '~/utils/db.server'
+import { cn, invariantResponse } from '~/utils/misc'
 
 export async function loader({ params }: DataFunctionArgs) {
 	const owner = await prisma.user.findFirst({

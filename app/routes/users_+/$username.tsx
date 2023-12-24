@@ -1,8 +1,8 @@
 import { json, type DataFunctionArgs, type MetaFunction } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
-import { GeneralErrorBoundary } from '~/components/error-boundary.tsx'
-import { prisma } from '~/utils/db.server.ts'
-import { invariantResponse } from '~/utils/misc.tsx'
+import { GeneralErrorBoundary } from '~/components/error-boundary'
+import { prisma } from '~/utils/db.server'
+import { invariantResponse } from '~/utils/misc'
 
 export async function loader({ params }: DataFunctionArgs) {
 	const user = await prisma.user.findFirst({

@@ -6,13 +6,13 @@ import {
 } from '@remix-run/node'
 import { Form, Link, useLoaderData } from '@remix-run/react'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
-import { validateCSRF } from '~/utils/csrf.server.ts'
-import { GeneralErrorBoundary } from '~/components/error-boundary.tsx'
-import { Button } from '~/components/ui/button.tsx'
-import { StatusButton } from '~/components/ui/status-button.tsx'
-import { prisma } from '~/utils/db.server.ts'
-import { invariantResponse, useIsPending } from '~/utils/misc.tsx'
-import { type loader as NoteLoader } from './notes.tsx'
+import { validateCSRF } from '~/utils/csrf.server'
+import { GeneralErrorBoundary } from '~/components/error-boundary'
+import { Button } from '~/components/ui/button'
+import { StatusButton } from '~/components/ui/status-button'
+import { prisma } from '~/utils/db.server'
+import { invariantResponse, useIsPending } from '~/utils/misc'
+import { type loader as NoteLoader } from './notes'
 
 export async function loader({ params }: DataFunctionArgs) {
 	const note = await prisma.note.findFirst({
@@ -51,8 +51,8 @@ export default function SingleNoteRoute() {
 
 	return (
 		<div className=" flex-col px-8">
-			<h2 className="mb-2 pt-2 text-h2 lg:mb-6">{data.note.title}</h2>
-			<div className="overflow-y-auto pb-24">
+			<h2 className="mb-2 pt-2 text-h2">{data.note.title}</h2>
+			<div className="overflow-y-auto">
 				<p className="whitespace-break-spaces text-sm md:text-lg">
 					{data.note.content}
 				</p>

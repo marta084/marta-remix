@@ -1,7 +1,7 @@
 import React, { useId } from 'react'
-import { Input } from '~/components/ui/input.tsx'
-import { Label } from '~/components/ui/label.tsx'
-import { Textarea } from '~/components/ui/textarea.tsx'
+import { Input } from '~/components/ui/input'
+import { Label } from '~/components/ui/label'
+import { Textarea } from '~/components/ui/textarea'
 
 export type ListOfErrors = Array<string | null | undefined> | null | undefined
 
