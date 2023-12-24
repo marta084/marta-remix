@@ -11,7 +11,7 @@ import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { Button } from '~/components/ui/button'
 import { StatusButton } from '~/components/ui/status-button'
 import { prisma } from '~/utils/db.server'
-import { invariantResponse, useIsPending } from '~/utils/misc'
+import { getNoteImgSrc, invariantResponse, useIsPending } from '~/utils/misc'
 import { type loader as NoteLoader } from './notes'
 
 export async function loader({ params }: DataFunctionArgs) {
@@ -52,7 +52,21 @@ export default function SingleNoteRoute() {
 	return (
 		<div className=" flex-col px-8">
 			<h2 className="mb-2 pt-2 text-h2">{data.note.title}</h2>
+
 			<div className="overflow-y-auto">
+				<ul className="flex flex-wrap gap-5 py-5">
+					{data.note.images.map(image => (
+						<li key={image.id}>
+							<a href={getNoteImgSrc(image.id)}>
+								<img
+									src={getNoteImgSrc(image.id)}
+									alt={image.altText ?? ''}
+									className=" object-cover"
+								/>
+							</a>
+						</li>
+					))}
+				</ul>
 				<p className="whitespace-break-spaces text-sm md:text-lg">
 					{data.note.content}
 				</p>
