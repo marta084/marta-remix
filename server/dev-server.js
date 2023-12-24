@@ -1,4 +1,5 @@
 import { execa } from 'execa'
+import process from 'process'
 
 if (process.env.NODE_ENV === 'production') {
 	await import('./index.js')

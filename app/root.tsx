@@ -20,7 +20,6 @@ import { AuthenticityTokenProvider } from 'remix-utils/csrf/react'
 import MartaBlogFavicon from './assets/favicon.ico'
 import { GeneralErrorBoundary } from './components/error-boundary'
 import { csrf } from '~/utils/csrf.server'
-import { isbot } from 'isbot'
 
 // icon, styles, components
 import tailwindStyleSheet from './styles/tailwind.css'
