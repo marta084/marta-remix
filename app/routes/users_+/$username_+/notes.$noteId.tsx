@@ -61,7 +61,7 @@ export default function SingleNoteRoute() {
 								<img
 									src={getNoteImgSrc(image.id)}
 									alt={image.altText ?? ''}
-									className=" object-cover"
+									className="h-32 w-32 rounded-lg object-cover"
 								/>
 							</a>
 						</li>

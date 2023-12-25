@@ -232,7 +232,7 @@ export default function NoteEdit() {
 									>
 										<span aria-hidden>
 											<Icon name="cross-1" />
-										</span>{' '}
+										</span>
 										<span className="sr-only">Remove image {index + 1}</span>
 									</button>
 									<ImageChooser config={image} />
@@ -252,7 +252,7 @@ export default function NoteEdit() {
 				</div>
 				<ErrorList id={form.errorId} errors={form.errors} />
 			</Form>
-			<div className={floatingToolbarClassName}>
+			<div>
 				<Button form={form.id} variant="destructive" type="reset">
 					Reset
 				</Button>
@@ -348,6 +348,7 @@ function ImageChooser({
 				<div className="flex-1">
 					<Label htmlFor={fields.altText.id}>Alt Text</Label>
 					<Textarea
+						className="text-black"
 						onChange={e => setAltText(e.currentTarget.value)}
 						{...conform.textarea(fields.altText)}
 					/>
