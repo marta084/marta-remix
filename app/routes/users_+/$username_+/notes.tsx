@@ -1,7 +1,7 @@
 import { json, type DataFunctionArgs, type MetaFunction } from '@remix-run/node'
 import { Link, NavLink, Outlet, useLoaderData } from '@remix-run/react'
 import { prisma } from '~/utils/db.server'
-import { cn, invariantResponse } from '~/utils/misc'
+import { cn, getUserImgSrc, invariantResponse } from '~/utils/misc'
 
 export async function loader({ params }: DataFunctionArgs) {
 	const owner = await prisma.user.findFirst({
@@ -11,7 +11,9 @@ export async function loader({ params }: DataFunctionArgs) {
 			image: { select: { id: true } },
 			notes: { select: { id: true, title: true } },
 		},
-		where: { username: params.username },
+		where: {
+			username: params.username,
+		},
 	})
 	invariantResponse(owner, 'User not found', { status: 404 })
 	return json({ owner })
@@ -19,14 +21,20 @@ export async function loader({ params }: DataFunctionArgs) {
 
 export default function NotesRoute() {
 	const data = useLoaderData<typeof loader>()
-	const ownerDisplayName = data.owner.name ?? data.owner.username
+	const user = data.owner
+	const userDisplayName = data.owner.name ?? data.owner.username
 
 	return (
 		<div>
 			<div className="w-60">
-				<Link to={`/users/${data.owner.username}/`}>
+				<Link to={`/users/${user.username}/`}>
 					<div className="p-8 m-4 shadow-sm rounded-lg overflow-hidden bg-white text-lg font-bold hover:bg-gray-600 hover:text-gray-100 transition duration-200 ease-in-out w-60">
-						{ownerDisplayName}s Profile
+						<img
+							src={getUserImgSrc(data.owner.image?.id)}
+							alt={userDisplayName}
+							className="h-24 w-24 rounded-full object-cover"
+						/>
+						{userDisplayName}s Profile
 					</div>
 				</Link>
 			</div>

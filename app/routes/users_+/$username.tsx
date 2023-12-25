@@ -28,26 +28,27 @@ export default function UserRoute() {
 	const userDisplayName = user.name ?? user.username
 	return (
 		<div className="flex-grow">
-			<h1 className="m-4 pb-8">profile:</h1>
-			<div className="relative">
-				<img
-					src={getUserImgSrc(data.user.image?.id)}
-					alt={userDisplayName}
-					className="h-52 w-52 rounded-full object-cover"
-				/>
+			<div>
+				<h1 className="m-4">profile:</h1>
+				<div className="relative">
+					<img
+						src={getUserImgSrc(data.user.image?.id)}
+						alt={userDisplayName}
+						className="h-52 w-52 rounded-full object-cover"
+					/>
+				</div>
+
+				<Link
+					to={`/users/${data.user.username}`}
+					className=" px-4 shadow-sm rounded-lg overflow-hidden text-lg font-bold bg-gray-600 text-gray-100 transition duration-200 ease-in-out"
+				>
+					{userDisplayName}
+				</Link>
+				<p className="mt-2 text-muted-foreground">
+					Joined {data.userJoinedDisplay}
+				</p>
 			</div>
-
-			<Link
-				to={`/users/${data.user.username}`}
-				className=" px-4 shadow-sm rounded-lg overflow-hidden text-lg font-bold bg-gray-600 text-gray-100 transition duration-200 ease-in-out"
-			>
-				{userDisplayName}
-			</Link>
-			<p className="mt-2 text-muted-foreground">
-				Joined {data.userJoinedDisplay}
-			</p>
-
-			<div className="m-8">
+			<div className="m-8 pt-8">
 				<div className="pb-4">
 					<Link
 						to={`/users/${data.user.username}/notes`}

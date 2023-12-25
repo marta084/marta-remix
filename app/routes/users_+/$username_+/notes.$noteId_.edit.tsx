@@ -20,7 +20,6 @@ import { useRef, useState } from 'react'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { z } from 'zod'
 import { GeneralErrorBoundary } from '~/components/error-boundary'
-import { floatingToolbarClassName } from '~/components/floating-toolbar'
 import { ErrorList, Field, TextareaField } from '~/components/forms'
 import { Button } from '~/components/ui/button'
 import { Icon } from '~/components/ui/icon'
@@ -194,11 +193,7 @@ export default function NoteEdit() {
 				encType="multipart/form-data"
 			>
 				<AuthenticityTokenInput />
-				{/*
-					This hidden submit button is here to ensure that when the user hits
-					"enter" on an input field, the primary form function is submitted
-					rather than the first button in the form (which is delete/add image).
-				*/}
+
 				<button type="submit" className="hidden" />
 				<div className="flex flex-col gap-1">
 					<Field
@@ -252,8 +247,13 @@ export default function NoteEdit() {
 				</div>
 				<ErrorList id={form.errorId} errors={form.errors} />
 			</Form>
-			<div>
-				<Button form={form.id} variant="destructive" type="reset">
+			<div className="flex justify-end">
+				<Button
+					form={form.id}
+					variant="destructive"
+					type="reset"
+					className="bg-gray-700 text-white rounded"
+				>
 					Reset
 				</Button>
 				<StatusButton
@@ -261,6 +261,7 @@ export default function NoteEdit() {
 					type="submit"
 					disabled={isPending}
 					status={isPending ? 'pending' : 'idle'}
+					className="bg-gray-700 text-white rounded ml-4"
 				>
 					Submit
 				</StatusButton>
