@@ -23,6 +23,11 @@ export default function Index() {
 
 	return (
 		<main className="flex-grow py-4 px-4 sm:px-6 lg:px-8 bg-gray-100 ">
+			<Link to="users">
+				<h1 className="flex text-lg font-semibold justify-end underline">
+					Users Page
+				</h1>
+			</Link>
 			<div>
 				{users.map(user => (
 					<div

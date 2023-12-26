@@ -47,19 +47,23 @@ export default function NotesRoute() {
 			<div className="grid w-full grid-cols-4 bg-muted pl-2 md:container md:rounded-3xl md:pr-0">
 				<div className="relative col-span-1 border-2 mr-2 border-gray-450">
 					<ul className="overflow-y-auto overflow-x-hidden pb-12">
-						{data.owner.notes.map(note => (
-							<li key={note.id} className="m-1 p-4 border-2 border-gray-300">
-								<NavLink
-									to={note.id}
-									className={({ isActive }) =>
-										cn(isActive && 'bg-black text-white')
-									}
-									preventScrollReset
-								>
-									{note.title}
-								</NavLink>
-							</li>
-						))}
+						{data.owner.notes.length > 0 ? (
+							data.owner.notes.map(note => (
+								<li key={note.id} className="m-1 p-4 border-2 border-gray-300">
+									<NavLink
+										to={note.id}
+										className={({ isActive }) =>
+											cn(isActive && 'bg-black text-white')
+										}
+										preventScrollReset
+									>
+										{note.title}
+									</NavLink>
+								</li>
+							))
+						) : (
+							<p>No notes yet</p>
+						)}
 					</ul>
 				</div>
 				<div className="relative col-span-3 bg-accent border-2 border-red-500 p-4 mr-2">
