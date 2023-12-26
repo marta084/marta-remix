@@ -14,6 +14,7 @@ import {
 	unstable_parseMultipartFormData as parseMultipartFormData,
 	redirect,
 	type DataFunctionArgs,
+	type MetaFunction,
 } from '@remix-run/node'
 import { Form, useActionData, useLoaderData } from '@remix-run/react'
 import { useRef, useState } from 'react'
@@ -366,6 +367,11 @@ function ImageChooser({
 			</div>
 		</fieldset>
 	)
+}
+
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
+	const noteTitle = data?.note.title ?? 'Note'
+	return [{ title: `${noteTitle} - edit` }]
 }
 
 export function ErrorBoundary() {

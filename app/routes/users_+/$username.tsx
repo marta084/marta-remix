@@ -27,7 +27,7 @@ export default function UserRoute() {
 	const user = data.user
 	const userDisplayName = user.name ?? user.username
 	return (
-		<div className="flex-grow">
+		<div className="mb-auto">
 			<div>
 				<h1 className="m-4">profile:</h1>
 				<div className="relative">

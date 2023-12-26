@@ -57,7 +57,7 @@ function Document({ children }: { children: React.ReactNode }) {
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
 				<Links />
 			</head>
-			<body className="max-w-3xl mx-auto bg-gray-100 flex flex-col w-full h-full">
+			<body className="flex flex-col min-h-screen">
 				{children}
 				<ScrollRestoration />
 				<Scripts />
