@@ -38,9 +38,11 @@ export default function UsersRoute() {
 
 	return (
 		<div className="mb-auto">
-			<h1 className="text-lg">Users</h1>
-			<div className="w-full ">
-				<SearchBar status={data.status} autoFocus autoSubmit />
+			<div className="flex justify-between">
+				<h1 className="text-lg">Users</h1>
+				<div className="w-1/2">
+					<SearchBar status={data.status} autoFocus autoSubmit />
+				</div>
 			</div>
 			<main>
 				{data.status === 'idle' ? (
