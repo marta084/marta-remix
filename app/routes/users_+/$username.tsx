@@ -28,8 +28,10 @@ export default function UserRoute() {
 	const userDisplayName = user.name ?? user.username
 	return (
 		<div className="mb-auto">
-			<div>
-				<h1 className="m-4">profile:</h1>
+			<div className="">
+				<h1 className="m-4">
+					user profile: {data.user.name ?? data.user.username}
+				</h1>
 				<div className="relative">
 					<img
 						src={getUserImgSrc(data.user.image?.id)}

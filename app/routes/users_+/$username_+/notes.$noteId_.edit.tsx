@@ -223,13 +223,10 @@ export default function NoteEdit() {
 									className="relative border-b-2 border-muted-foreground"
 								>
 									<button
-										className="text-foreground-destructive absolute right-0 top-0"
+										className="text-white bg-gray-400 absolute right-0 top-0 flex items-center justify-center px-2 mb-2"
 										{...list.remove(fields.images.name, { index })}
 									>
-										<span aria-hidden>
-											<Icon name="cross-1" />
-										</span>
-										<span className="sr-only">Remove image {index + 1}</span>
+										X<span className="sr-only">Remove image {index + 1}</span>
 									</button>
 									<ImageChooser config={image} />
 								</li>
@@ -237,11 +234,13 @@ export default function NoteEdit() {
 						</ul>
 					</div>
 					<Button
-						className="mt-3"
+						className="mt-3 mb-3 bg-gray-800 text-white"
 						{...list.insert(fields.images.name, { defaultValue: {} })}
 					>
 						<span aria-hidden>
-							<Icon name="plus">Image</Icon>
+							<Icon name="plus" className="bg-gray-400 ">
+								add Image
+							</Icon>
 						</span>
 						<span className="sr-only">Add image</span>
 					</Button>
@@ -249,12 +248,7 @@ export default function NoteEdit() {
 				<ErrorList id={form.errorId} errors={form.errors} />
 			</Form>
 			<div className="flex justify-end">
-				<Button
-					form={form.id}
-					variant="destructive"
-					type="reset"
-					className="bg-gray-700 text-white rounded"
-				>
+				<Button form={form.id} variant="destructive" type="reset">
 					Reset
 				</Button>
 				<StatusButton
@@ -262,7 +256,7 @@ export default function NoteEdit() {
 					type="submit"
 					disabled={isPending}
 					status={isPending ? 'pending' : 'idle'}
-					className="bg-gray-700 text-white rounded ml-4"
+					className="bg-gray-900 text-white rounded ml-4"
 				>
 					Submit
 				</StatusButton>
@@ -296,7 +290,7 @@ function ImageChooser({
 						<label
 							htmlFor={fields.file.id}
 							className={cn('group absolute h-32 w-32 rounded-lg', {
-								'bg-accent opacity-40 focus-within:opacity-100 hover:opacity-100':
+								'bg-gray-200 opacity-40 focus-within:opacity-100 hover:opacity-100':
 									!previewImage,
 								'cursor-pointer focus-within:ring-4': !existingImage,
 							})}
@@ -309,13 +303,13 @@ function ImageChooser({
 										className="h-32 w-32 rounded-lg object-cover"
 									/>
 									{existingImage ? null : (
-										<div className="pointer-events-none absolute -right-0.5 -top-0.5 rotate-12 rounded-sm bg-secondary px-2 py-1 text-xs text-secondary-foreground shadow-md">
+										<div className="pointer-events-none absolute -right-0.5 -top-0.5 rotate-12 rounded-sm  py-1 text-xs text-black shadow-md">
 											new
 										</div>
 									)}
 								</div>
 							) : (
-								<div className="flex h-32 w-32 items-center justify-center rounded-lg border border-muted-foreground text-4xl text-muted-foreground">
+								<div className="flex h-32 w-32 items-center justify-center rounded-lg border-2 border-gray-400 text-4xl text-black">
 									<Icon name="plus" />
 								</div>
 							)}

@@ -20,6 +20,7 @@ textarea {
 
 html {
 	@apply bg-gray-100 text-black;
+	background-image: url('https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExMzI2dnV6N3JpaWV5ZG5rbTd6OWRjeWhleHAxb3RucDFkdHZ5b21ydiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/1i2Hy7gDDBjRlhMwFx/giphy.gif');
 }
 
 .marta-shadow {

@@ -26,9 +26,9 @@ export default function NotesRoute() {
 
 	return (
 		<div>
-			<div className="w-60">
+			<div className="inline-block">
 				<Link to={`/users/${user.username}/`}>
-					<div className="p-8 m-4 shadow-sm rounded-lg overflow-hidden bg-white text-lg font-bold hover:bg-gray-600 hover:text-gray-100 transition duration-200 ease-in-out w-60">
+					<div className="p-1 m-4 shadow-sm rounded-lg overflow-hidden bg-white text-lg font-bold hover:bg-gray-600 hover:text-gray-100 transition duration-200 ease-in-out">
 						<img
 							src={getUserImgSrc(data.owner.image?.id)}
 							alt={userDisplayName}

@@ -39,7 +39,7 @@ export default function UsersRoute() {
 	return (
 		<div className="mb-auto">
 			<h1 className="text-lg">Users</h1>
-			<div className="w-full max-w-[700px] ">
+			<div className="w-full ">
 				<SearchBar status={data.status} autoFocus autoSubmit />
 			</div>
 			<main>
