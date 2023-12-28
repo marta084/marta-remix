@@ -8,6 +8,7 @@
     "dev": "remix dev --manual",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
     "start": "remix-serve ./build/index.js",
+    "seed": "npx tsx prisma/seed.ts",
     "typecheck": "tsc"
   },
   "dependencies": {
@@ -75,6 +76,7 @@
     "prettier-plugin-tailwindcss": "^0.5.9",
     "remix-flat-routes": "^0.6.4",
     "rmx-cli": "^0.4.15",
+    "ts-node": "^10.9.2",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   },

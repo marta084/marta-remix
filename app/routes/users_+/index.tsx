@@ -5,15 +5,6 @@ import { SearchBar } from '~/components/search-bar'
 import { prisma } from '~/utils/db.server'
 import { cn, getUserImgSrc, useDelayedIsPending } from '~/utils/misc'
 
-type User = {
-	id: string
-	username: string
-	name: string | null
-	image?: {
-		id: string
-	}
-}
-
 export async function loader({ request }: DataFunctionArgs) {
 	const searchTerm = new URL(request.url).searchParams.get('search')
 	if (searchTerm === '') {
@@ -25,11 +16,14 @@ export async function loader({ request }: DataFunctionArgs) {
 				contains: searchTerm ?? '',
 			},
 		},
+		include: {
+			image: true, // Include the `image` relation
+		},
 	})
 
 	return json({
 		status: 'idle',
-		users: users.map((u: User) => ({
+		users: users.map(u => ({
 			id: u.id,
 			username: u.username,
 			name: u.name,
@@ -49,9 +43,6 @@ export default function UsersRoute() {
 		<div className="mb-auto">
 			<div className="flex justify-between">
 				<h1 className="text-lg">Users</h1>
-				<div className="w-1/2">
-					<SearchBar status={data.status} autoFocus autoSubmit />
-				</div>
 			</div>
 			<main>
 				{data.status === 'idle' ? (

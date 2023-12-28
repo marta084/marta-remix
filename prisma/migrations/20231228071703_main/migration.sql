@@ -48,14 +48,6 @@ CREATE TABLE "UserImage" (
     CONSTRAINT "UserImage_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "password" (
-    "id" TEXT NOT NULL,
-    "hash" TEXT NOT NULL,
-
-    CONSTRAINT "password_pkey" PRIMARY KEY ("id")
-);
-
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
