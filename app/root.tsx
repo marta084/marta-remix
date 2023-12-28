@@ -28,6 +28,7 @@ import Footer from './components/footer'
 import Header from './components/header'
 import { getEnv } from './utils/env.server'
 import { honeypot } from './utils/honeypot.server'
+import { useNavigation } from '@remix-run/react'
 
 export const links: LinksFunction = () => {
 	return [
@@ -68,12 +69,18 @@ function Document({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
+	const { state } = useNavigation()
 	return (
 		<Document>
 			<Header />
 			<div className="bg-gray-100 p-4">
 				<Outlet />
 			</div>
+			{state === 'loading' ? (
+				<div className="fixed inset-0 bg-white/20 flex items-center justify-center z-50">
+					<div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-64 w-64"></div>
+				</div>
+			) : null}
 			<Footer />
 		</Document>
 	)
