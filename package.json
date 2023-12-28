@@ -75,7 +75,6 @@
     "prettier-plugin-tailwindcss": "^0.5.9",
     "remix-flat-routes": "^0.6.4",
     "rmx-cli": "^0.4.15",
-    "ts-node": "^10.9.2",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   },
