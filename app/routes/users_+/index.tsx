@@ -5,6 +5,15 @@ import { SearchBar } from '~/components/search-bar'
 import { prisma } from '~/utils/db.server'
 import { cn, getUserImgSrc, useDelayedIsPending } from '~/utils/misc'
 
+type User = {
+	id: string
+	username: string
+	name: string | null
+	image?: {
+		id: string
+	}
+}
+
 export async function loader({ request }: DataFunctionArgs) {
 	const searchTerm = new URL(request.url).searchParams.get('search')
 	if (searchTerm === '') {
@@ -20,7 +29,7 @@ export async function loader({ request }: DataFunctionArgs) {
 
 	return json({
 		status: 'idle',
-		users: users.map(u => ({
+		users: users.map((u: User) => ({
 			id: u.id,
 			username: u.username,
 			name: u.name,

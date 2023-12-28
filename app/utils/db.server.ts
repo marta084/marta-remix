@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import chalk from 'chalk'
-import { singleton } from './singleton.server.ts'
+import { singleton } from './singleton.server'
 
 const prisma = singleton('prisma', () => {
 	// NOTE: if you change anything in this function you'll need to restart
