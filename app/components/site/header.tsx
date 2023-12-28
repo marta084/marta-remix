@@ -5,7 +5,7 @@ export default function Header() {
 	const matches = useMatches()
 	const isOnSearchPage = matches.find(m => m.id === 'routes/users+/index')
 	return (
-		<header className="bg-white py-4 px-8">
+		<header className="bg-white py-4 px-4">
 			<div className="flex justify-between items-center">
 				<h1 className=" text-black font-semibold font-sans text-lg">
 					<Link to="/">Marta</Link>
@@ -16,8 +16,11 @@ export default function Header() {
 							<SearchBar status="idle" />
 						</div>
 					)}
-					<Link className="underline" to="/signup">
-						Singup
+					<Link className="text-lg mx-2" to="/signup">
+						Login
+					</Link>
+					<Link className="text-lg mx-2" to="/signup">
+						Sign up
 					</Link>
 				</div>
 			</div>
