@@ -29,9 +29,9 @@ export default function UserRoute() {
 	return (
 		<div className="mb-auto">
 			<div className="">
-				<h1 className="m-4">
+				{/* <h1 className="m-4">
 					user profile: {data.user.name ?? data.user.username}
-				</h1>
+				</h1> */}
 				<div className="relative">
 					<img
 						src={getUserImgSrc(data.user.image?.id)}
