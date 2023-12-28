@@ -38,3 +38,4 @@ tsconfig.tsbuildinfo
 # We're not changing these duing the workshop anyway
 # /app/components/ui/icon.svg
 # /app/components/ui/icon.tsx
+prisma/seed.ts
