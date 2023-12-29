@@ -2,6 +2,7 @@ import { json, redirect, type DataFunctionArgs } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
 import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { SearchBar } from '~/components/search-bar'
+import { Spacer } from '~/components/spacer'
 import { prisma } from '~/utils/db.server'
 import { cn, getUserImgSrc, useDelayedIsPending } from '~/utils/misc'
 
@@ -41,9 +42,11 @@ export default function UsersRoute() {
 
 	return (
 		<div className="mb-auto">
+			<Spacer size="4xs" />
 			<div className="flex justify-between">
-				<h1 className="text-lg">Users</h1>
+				<h1 className="text-lg">Users:</h1>
 			</div>
+			<Spacer size="4xs" />
 			<main>
 				{data.status === 'idle' ? (
 					data.users.length ? (
@@ -57,7 +60,7 @@ export default function UsersRoute() {
 								<li key={user.id}>
 									<Link
 										to={user.username}
-										className="flex h-36 w-44 flex-col items-center justify-center rounded-lg bg-muted px-5 py-3"
+										className="flex h-36 w-44 flex-col items-center justify-center rounded-lg bg-white px-5 py-3"
 									>
 										<img
 											alt={user.name ?? user.username}

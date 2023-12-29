@@ -27,7 +27,7 @@ export default function UserRoute() {
 	const user = data.user
 	const userDisplayName = user.name ?? user.username
 	return (
-		<div className="mb-auto">
+		<div className="mb-auto flex items-center">
 			<div className="">
 				{/* <h1 className="m-4">
 					user profile: {data.user.name ?? data.user.username}
