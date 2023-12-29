@@ -1,8 +1,17 @@
 import { json, type DataFunctionArgs, type MetaFunction } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
+import { z } from 'zod'
 import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { prisma } from '~/utils/db.server'
 import { getUserImgSrc, invariantResponse } from '~/utils/misc'
+
+const UserSchema = z.object({
+	id: z.string(),
+	username: z.string(),
+	name: z.string().nullable(),
+	imageId: z.string().nullable(),
+	createdAt: z.date(),
+})
 
 export async function loader({ params }: DataFunctionArgs) {
 	const user = await prisma.user.findFirst({

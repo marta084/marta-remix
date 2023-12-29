@@ -1,36 +1,48 @@
 import { json, redirect, type DataFunctionArgs } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
+import { z } from 'zod'
 import { GeneralErrorBoundary } from '~/components/error-boundary'
-import { SearchBar } from '~/components/search-bar'
 import { Spacer } from '~/components/spacer'
 import { prisma } from '~/utils/db.server'
 import { cn, getUserImgSrc, useDelayedIsPending } from '~/utils/misc'
+
+const UserSearchResultSchema = z.object({
+	id: z.string(),
+	username: z.string(),
+	name: z.string().nullable(),
+	imageId: z.string().nullable(),
+})
+
+const UserSearchResultsSchema = z.array(UserSearchResultSchema)
 
 export async function loader({ request }: DataFunctionArgs) {
 	const searchTerm = new URL(request.url).searchParams.get('search')
 	if (searchTerm === '') {
 		return redirect('/users')
 	}
-	const users = await prisma.user.findMany({
-		where: {
-			username: {
-				contains: searchTerm ?? '',
-			},
-		},
-		include: {
-			image: true, // Include the `image` relation
-		},
-	})
 
-	return json({
-		status: 'idle',
-		users: users.map(u => ({
-			id: u.id,
-			username: u.username,
-			name: u.name,
-			image: u.image ? { id: u.image.id } : undefined,
-		})),
-	} as const)
+	const like = `%${searchTerm ?? ''}%`
+	const rawUsers = await prisma.$queryRaw`
+  SELECT "User"."id", "User"."username", "User"."name", "UserImage"."id" AS "imageId"
+  FROM "User"
+  LEFT JOIN "UserImage" ON "UserImage"."userId" = "User"."id"
+  WHERE "User"."username" LIKE ${like}
+  OR "User"."name" LIKE ${like}
+  ORDER BY (
+    SELECT MAX("Note"."updatedAt")
+    FROM "Note"
+    WHERE "Note"."ownerId" = "User"."id"
+  ) DESC
+  LIMIT 50
+`
+
+	const result = UserSearchResultsSchema.safeParse(rawUsers)
+	if (!result.success) {
+		return json({ status: 'error', error: result.error.message } as const, {
+			status: 400,
+		})
+	}
+	return json({ status: 'idle', users: result.data } as const)
 }
 
 export default function UsersRoute() {
@@ -64,7 +76,7 @@ export default function UsersRoute() {
 									>
 										<img
 											alt={user.name ?? user.username}
-											src={getUserImgSrc(user.image?.id)}
+											src={getUserImgSrc(user.imageId)}
 											className="h-16 w-16 rounded-full"
 										/>
 										{user.name ? (
