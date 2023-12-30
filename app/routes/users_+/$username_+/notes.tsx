@@ -28,7 +28,10 @@ export async function loader({ params }: DataFunctionArgs) {
 			name: true,
 			username: true,
 			image: { select: { id: true } },
-			notes: { select: { id: true, title: true } },
+			notes: {
+				select: { id: true, title: true },
+				orderBy: { updatedAt: 'desc' },
+			},
 		},
 		where: {
 			username: params.username,

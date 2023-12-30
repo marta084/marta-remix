@@ -1,5 +1,5 @@
 import { json, redirect, type DataFunctionArgs } from '@remix-run/node'
-import { Link, useLoaderData } from '@remix-run/react'
+import { Link, useFetcher, useLoaderData } from '@remix-run/react'
 import { z } from 'zod'
 import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { Spacer } from '~/components/spacer'
@@ -45,6 +45,12 @@ export async function loader({ request }: DataFunctionArgs) {
 
 export default function UsersRoute() {
 	const data = useLoaderData<typeof loader>()
+
+	//data is loading ui
+	const fetcher = useFetcher()
+	const isLoadingData = fetcher.state === 'loading'
+
+	// when search a use show pending ui
 	const isPending = useDelayedIsPending({
 		formMethod: 'GET',
 		formAction: '/users',
@@ -58,7 +64,9 @@ export default function UsersRoute() {
 			</div>
 			<Spacer size="4xs" />
 			<main>
-				{data.status === 'idle' ? (
+				{isLoadingData ? (
+					<p>Loading...</p>
+				) : data.status === 'idle' ? (
 					data.users.length ? (
 						<ul
 							className={cn(
@@ -92,7 +100,9 @@ export default function UsersRoute() {
 					) : (
 						<p>No users found</p>
 					)
-				) : null}
+				) : (
+					<p>Something went wrong</p>
+				)}
 			</main>
 		</div>
 	)
