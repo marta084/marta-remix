@@ -1,17 +1,20 @@
-import { json, type DataFunctionArgs, type MetaFunction } from '@remix-run/node'
-import { Link, useLoaderData } from '@remix-run/react'
-import { z } from 'zod'
+import {
+	json,
+	type DataFunctionArgs,
+	type MetaFunction,
+	redirect,
+	unstable_composeUploadHandlers as composeUploadHandlers,
+	unstable_createMemoryUploadHandler as createMemoryUploadHandler,
+	unstable_parseMultipartFormData as parseMultipartFormData,
+} from '@remix-run/node'
+import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
 import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { prisma } from '~/utils/db.server'
 import { getUserImgSrc, invariantResponse } from '~/utils/misc'
-
-const UserSchema = z.object({
-	id: z.string(),
-	username: z.string(),
-	name: z.string().nullable(),
-	imageId: z.string().nullable(),
-	createdAt: z.date(),
-})
+import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
+import { validateCSRF } from '~/utils/csrf.server'
+import { Button } from '~/components/ui/button'
+import { uploadImage } from '~/utils/cloudinary.server'
 
 export async function loader({ params }: DataFunctionArgs) {
 	const user = await prisma.user.findFirst({
@@ -28,16 +31,71 @@ export async function loader({ params }: DataFunctionArgs) {
 
 	invariantResponse(user, 'User not found', { status: 404 })
 
-	return json({ user, userJoinedDisplay: user.createdAt.toLocaleDateString() })
+	return json({
+		user,
+		userJoinedDisplay: user.createdAt.toLocaleDateString(),
+	})
+}
+
+export const action = async ({ request, params }: DataFunctionArgs) => {
+	invariantResponse(params.username, 'Username is required', { status: 400 })
+
+	const uploadHandler = composeUploadHandlers(
+		async ({ name, data, filename }) => {
+			if (name !== 'profile') {
+				return undefined
+			}
+			console.log(filename)
+			const uploadedImage = await uploadImage(data)
+			console.log(uploadedImage)
+			return uploadedImage.secure_url
+		},
+		createMemoryUploadHandler(),
+	)
+
+	const formData = await parseMultipartFormData(request, uploadHandler)
+	await validateCSRF(formData, request.headers)
+	const intent = formData.get('intent')
+
+	invariantResponse(intent === 'upload', 'Invalid intent')
+
+	const imgSource = formData.get('img')
+	const imgDescription = formData.get('description')
+	console.log(imgSource)
+	if (!imgSource) {
+		return json({
+			error: 'something is wrong',
+		})
+	}
+	return json({
+		imgSource,
+		imgDescription,
+	})
 }
 
 export default function UserRoute() {
 	const data = useLoaderData<typeof loader>()
 	const user = data.user
 	const userDisplayName = user.name ?? user.username
+
 	return (
 		<div className="mb-auto flex items-center">
-			<div className="">
+			<div className="flex">
+				<Form method="post" encType="multipart/form-data">
+					<AuthenticityTokenInput />
+					<input type="file" name="profile" />
+					<Button
+						className="bg-slate-500 p-4 text-white mt-2"
+						name="intent"
+						value="upload"
+						type="submit"
+					>
+						Upload
+					</Button>
+				</Form>
+			</div>
+
+			<div className="w-full">
 				{/* <h1 className="m-4">
 					user profile: {data.user.name ?? data.user.username}
 				</h1> */}
@@ -59,11 +117,11 @@ export default function UserRoute() {
 					Joined {data.userJoinedDisplay}
 				</p>
 			</div>
-			<div className="m-8 pt-8">
+			<div>
 				<div className="pb-4">
 					<Link
 						to={`/users/${data.user.username}/notes`}
-						className="p-8 mr-4 shadow-sm rounded-lg overflow-hidden bg-white text-lg font-bold hover:bg-gray-600 hover:text-gray-100 transition duration-200 ease-in-out"
+						className="shadow-sm rounded-lg overflow-hidden bg-white text-lg font-bold hover:bg-gray-600 hover:text-gray-100 transition duration-200 ease-in-out"
 					>
 						{userDisplayName} Notes
 					</Link>

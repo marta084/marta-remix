@@ -16,12 +16,12 @@ export default function Header() {
 							<SearchBar status="idle" />
 						</div>
 					)}
-					<Link className="text-lg mx-2" to="/signup">
+					{/* <Link className="text-lg mx-2" to="/signup">
 						Login
 					</Link>
 					<Link className="text-lg mx-2" to="/signup">
 						Sign up
-					</Link>
+					</Link> */}
 				</div>
 			</div>
 		</header>
