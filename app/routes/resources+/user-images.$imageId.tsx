@@ -6,17 +6,22 @@ export async function loader({ params }: DataFunctionArgs) {
 	invariantResponse(params.imageId, 'Image ID is required', { status: 400 })
 	const image = await prisma.userImage.findUnique({
 		where: { id: params.imageId },
-		select: { contentType: true, blob: true },
+		select: { contentType: true, blob: true, cloudinaryurl: true },
 	})
 
 	invariantResponse(image, 'Not found', { status: 404 })
 
-	return new Response(image.blob, {
-		headers: {
-			'content-type': image.contentType,
-			'content-length': Buffer.byteLength(image.blob).toString(),
-			'content-disposition': `inline; filename="${params.imageId}"`,
-			'cache-control': 'public, max-age=31536000, immutable',
-		},
-	})
+	// Check if image.cloudinaryurl is not null
+	if (image.cloudinaryurl) {
+		// Return a redirect response to the cloudinaryurl
+		return new Response(null, {
+			status: 302,
+			headers: {
+				Location: image.cloudinaryurl,
+			},
+		})
+	} else {
+		// Return a 404 Not Found response if image.cloudinaryurl is null
+		return new Response('Not found', { status: 404 })
+	}
 }

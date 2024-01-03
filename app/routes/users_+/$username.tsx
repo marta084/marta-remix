@@ -10,11 +10,18 @@ import {
 import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
 import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { prisma } from '~/utils/db.server'
-import { getUserImgSrc, invariantResponse } from '~/utils/misc'
+import { getUserImgSrc, invariantResponse, useIsPending } from '~/utils/misc'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { validateCSRF } from '~/utils/csrf.server'
 import { Button } from '~/components/ui/button'
 import { uploadImage } from '~/utils/cloudinary.server'
+import { useState } from 'react'
+import { StatusButton } from '~/components/ui/status-button'
+import { conform, useForm } from '@conform-to/react'
+import { getFieldsetConstraint, parse } from '@conform-to/zod'
+import { z } from 'zod'
+
+// --------------- loader -----------------
 
 export async function loader({ params }: DataFunctionArgs) {
 	const user = await prisma.user.findFirst({
@@ -22,7 +29,7 @@ export async function loader({ params }: DataFunctionArgs) {
 			name: true,
 			username: true,
 			createdAt: true,
-			image: { select: { id: true } },
+			image: { select: { id: true, cloudinaryurl: true } },
 		},
 		where: {
 			username: params.username,
@@ -37,12 +44,37 @@ export async function loader({ params }: DataFunctionArgs) {
 	})
 }
 
+// Client-side schema
+const formSchema = z.object({
+	img: z.instanceof(File, { message: 'Image is required' }).refine(
+		file => {
+			// Check that the file type is an image
+			const fileType = file.type
+			return fileType.startsWith('image/')
+		},
+		{
+			message: 'File must be an image',
+		},
+	),
+})
+
+// Server-side schema
+const actionSchema = z.object({
+	img: z.string().url(),
+})
+
+const MAX_UPLOAD_SIZE = 1024 * 1024 * 3 // 3MB
+
+// --------------- action -----------------
+
 export const action = async ({ request, params }: DataFunctionArgs) => {
+	console.log('------------------------------ started action -----------------')
+
 	invariantResponse(params.username, 'Username is required', { status: 400 })
 
 	const uploadHandler = composeUploadHandlers(
 		async ({ name, data, filename }) => {
-			if (name !== 'profile') {
+			if (name !== 'img') {
 				return undefined
 			}
 			console.log(filename)
@@ -50,58 +82,110 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
 			console.log(uploadedImage)
 			return uploadedImage.secure_url
 		},
-		createMemoryUploadHandler(),
+		createMemoryUploadHandler({ maxPartSize: MAX_UPLOAD_SIZE }),
 	)
 
 	const formData = await parseMultipartFormData(request, uploadHandler)
 	await validateCSRF(formData, request.headers)
-	const intent = formData.get('intent')
 
-	invariantResponse(intent === 'upload', 'Invalid intent')
+	const imgFile = formData.get('img')
 
-	const imgSource = formData.get('img')
-	const imgDescription = formData.get('description')
-	console.log(imgSource)
-	if (!imgSource) {
+	const submission = actionSchema.safeParse({
+		img: imgFile,
+	})
+
+	if (!submission.success) {
+		console.log('imgFile:', imgFile)
+		console.log('Validation errors:', submission.error.flatten())
+		return json(
+			{ status: 'error', errors: submission.error.flatten() },
+			{ status: 400 },
+		)
+	}
+
+	const { img } = submission.data
+
+	// Continue with your existing code
+	console.log('------------------------------ 1-----------------')
+	if (!img) {
 		return json({
 			error: 'something is wrong',
 		})
 	}
-	return json({
-		imgSource,
-		imgDescription,
+	console.log('------------------------------ 2 -----------------')
+	const retrievedUser = await prisma.user.findUnique({
+		where: {
+			username: params.username,
+		},
 	})
+
+	await prisma.userImage.update({
+		where: {
+			userId: retrievedUser?.id,
+		},
+		data: {
+			cloudinaryurl: img,
+		},
+	})
+	console.log(
+		'------------------------------ ended action -----------------',
+		img,
+	)
+
+	return redirect(`/users/${params.username}`)
 }
+
+// --------------- component -----------------
 
 export default function UserRoute() {
 	const data = useLoaderData<typeof loader>()
+	const actionData = useActionData<typeof action>()
 	const user = data.user
 	const userDisplayName = user.name ?? user.username
+	const isPending = useIsPending()
+
+	const [form, fields] = useForm({
+		id: 'img-upload',
+		constraint: getFieldsetConstraint(formSchema),
+		lastSubmission: (actionData as { submission?: any })?.submission,
+		onValidate({ formData }) {
+			return parse(formData, { schema: formSchema })
+		},
+	})
 
 	return (
-		<div className="mb-auto flex items-center">
-			<div className="flex">
-				<Form method="post" encType="multipart/form-data">
+		<div className="">
+			<div className="my-8 flex justify-end">
+				<Form method="post" encType="multipart/form-data" {...form.props}>
 					<AuthenticityTokenInput />
-					<input type="file" name="profile" />
-					<Button
+					<label htmlFor={fields.img.id}></label>
+					<input type="file" {...conform.input(fields.img)} />
+
+					{fields.img.errors ? (
+						<div className="text-red-400" role="alert">
+							{fields.img.errors[0]}
+						</div>
+					) : null}
+
+					<StatusButton
 						className="bg-slate-500 p-4 text-white mt-2"
-						name="intent"
-						value="upload"
 						type="submit"
+						disabled={isPending}
+						status={isPending ? 'pending' : 'idle'}
 					>
 						Upload
-					</Button>
+					</StatusButton>
+					<div>{form.error}</div>
 				</Form>
 			</div>
 
-			<div className="w-full">
+			<div className="w-full mb-auto flex items-center">
 				{/* <h1 className="m-4">
 					user profile: {data.user.name ?? data.user.username}
 				</h1> */}
 				<div className="relative">
 					<img
-						src={getUserImgSrc(data.user.image?.id)}
+						src={data.user.image?.cloudinaryurl ?? ''}
 						alt={userDisplayName}
 						className="h-52 w-52 rounded-full object-cover"
 					/>
