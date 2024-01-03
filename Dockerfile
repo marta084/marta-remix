@@ -1,54 +1,62 @@
-# syntax = docker/dockerfile:1
+# base node image
+FROM node:18-bullseye-slim as base
 
-# Adjust NODE_VERSION as desired
-ARG NODE_VERSION=18.18.2
-FROM node:${NODE_VERSION}-slim as base
+# Install openssl for Prisma
+RUN apt-get update && apt-get install -y openssl
 
-LABEL fly_launch_runtime="Remix/Prisma"
+# Install all node_modules, including dev dependencies
+FROM base as deps
 
-# Remix/Prisma app lives here
+RUN mkdir /app
 WORKDIR /app
 
-# Set production environment
-ENV NODE_ENV="production"
+ADD package.json package-lock.json ./
+RUN npm install
 
+# Setup production node_modules
+FROM base as production-deps
 
-# Throw-away build stage to reduce size of final image
+RUN mkdir /app
+WORKDIR /app
+
+COPY --from=deps /app/node_modules /app/node_modules
+ADD package.json package-lock.json ./
+RUN npm prune --production
+
+# Build the app
 FROM base as build
 
-# Install packages needed to build node modules
-RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential node-gyp openssl pkg-config python-is-python3
+ENV NODE_ENV=production
 
-# Install node modules
-COPY --link package-lock.json package.json ./
-RUN npm ci --include=dev
+RUN mkdir /app
+WORKDIR /app
 
-# Generate Prisma Client
-COPY --link prisma .
+COPY --from=deps /app/node_modules /app/node_modules
+
+# If we're using Prisma, uncomment to cache the prisma schema
+ADD prisma .
 RUN npx prisma generate
 
-# Copy application code
-COPY --link . .
-
-# Build application
+ADD . .
 RUN npm run build
 
-# Remove development dependencies
-RUN npm prune --omit=dev
-
-
-# Final stage for app image
+# Finally, build the production image with minimal footprint
 FROM base
 
-# Install packages needed for deployment
-RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y openssl && \
-    rm -rf /var/lib/apt/lists /var/cache/apt/archives
+ENV NODE_ENV=production
 
-# Copy built application
-COPY --from=build /app /app
 
-# Start the server by default, this can be overwritten at runtime
-EXPOSE 3000
-CMD [ "npm", "run", "start" ]
+RUN mkdir /app
+WORKDIR /app
+
+COPY --from=production-deps /app/node_modules /app/node_modules
+
+# Uncomment if using Prisma
+COPY --from=build /app/node_modules/.prisma /app/node_modules/.prisma
+
+
+COPY --from=build /app/build /app/build
+COPY --from=build /app/public /app/public
+ADD . .
+
+CMD ["npm", "run", "start"]
