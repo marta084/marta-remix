@@ -1,6 +1,7 @@
 {
   "include": ["types/*.ts", "**/*.ts", "**/*.tsx"],
   "compilerOptions": {
+    "module": "esnext",
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "isolatedModules": true,
     "esModuleInterop": true,

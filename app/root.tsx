@@ -28,9 +28,13 @@ import Footer from './components/site/footer'
 import Header from './components/site/header'
 import { getEnv } from './utils/env.server'
 import { honeypot } from './utils/honeypot.server'
+import rdtStylesheet from 'remix-development-tools/index.css'
 
 export const links: LinksFunction = () => {
 	return [
+		...(process.env.NODE_ENV === 'development'
+			? [{ rel: 'stylesheet', href: rdtStylesheet }]
+			: []),
 		{ rel: 'icon', href: MartaBlogFavicon, type: 'image/x-icon' },
 		{ rel: 'stylesheet', href: tailwindStyleSheet },
 		cssBundleHref ? { rel: 'stylesheet', href: cssBundleHref } : null,
@@ -78,12 +82,19 @@ function App() {
 	)
 }
 
+let AppExport = App
+
+if (process.env.NODE_ENV === 'development') {
+	const { withDevTools } = await import('remix-development-tools')
+	AppExport = withDevTools(AppExport)
+}
+
 export default function AppWithProviders() {
 	const data = useLoaderData<typeof loader>()
 	return (
 		<AuthenticityTokenProvider token={data.csrfToken}>
 			<HoneypotProvider {...data.honeyProps}>
-				<App />
+				<AppExport />
 			</HoneypotProvider>
 		</AuthenticityTokenProvider>
 	)
