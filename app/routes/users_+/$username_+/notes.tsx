@@ -7,9 +7,10 @@ import { cn, getUserImgSrc, invariantResponse } from '~/utils/misc'
 const UserSchema = z.object({
 	name: z.string().nullable(),
 	username: z.string(),
-	image: z
+	userImage: z
 		.object({
 			id: z.string().nullable(),
+			cloudinaryurl: z.string(),
 		})
 		.nullable(),
 	notes: z
@@ -27,7 +28,7 @@ export async function loader({ params }: DataFunctionArgs) {
 		select: {
 			name: true,
 			username: true,
-			image: { select: { id: true } },
+			userImage: { select: { id: true, cloudinaryurl: true } },
 			notes: {
 				select: { id: true, title: true },
 				orderBy: { updatedAt: 'desc' },
@@ -37,6 +38,7 @@ export async function loader({ params }: DataFunctionArgs) {
 			username: params.username,
 		},
 	})
+
 	invariantResponse(owner, 'User not found', { status: 404 })
 
 	// Validate the owner object with Zod
@@ -54,9 +56,9 @@ export default function NotesRoute() {
 		<div>
 			<div className="inline-block">
 				<Link to={`/users/${user.username}/`}>
-					<div className="p-1 m-4 shadow-sm rounded-lg overflow-hidden bg-white text-lg font-bold hover:bg-gray-600 hover:text-gray-100 transition duration-200 ease-in-out">
+					<div className="p-1 m-4 shadow-sm rounded-lg overflow-hidden bg-muted text-lg font-bold hover:bg-gray-600 hover:text-gray-100 transition duration-200 ease-in-out">
 						<img
-							src={getUserImgSrc(data.owner.image?.id)}
+							src={data.owner.userImage?.cloudinaryurl}
 							alt={userDisplayName}
 							className="h-24 w-24 rounded-full object-cover"
 						/>
@@ -65,7 +67,7 @@ export default function NotesRoute() {
 				</Link>
 			</div>
 
-			<h1 className="m-4 text-lg font-medium bg-white">
+			<h1 className="m-4 text-lg font-medium">
 				<Link to="/users/kody/notes" relative="path">
 					Notes
 				</Link>

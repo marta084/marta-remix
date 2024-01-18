@@ -1,63 +1,83 @@
-import { json, redirect, type DataFunctionArgs } from '@remix-run/node'
+import { json, redirect } from '@remix-run/node'
+import type { LoaderFunctionArgs } from '@remix-run/node'
 import { Link, useFetcher, useLoaderData } from '@remix-run/react'
 import { z } from 'zod'
-import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { Spacer } from '~/components/spacer'
 import { prisma } from '~/utils/db.server'
-import { cn, getUserImgSrc, useDelayedIsPending } from '~/utils/misc'
+import { cn, useDelayedIsPending } from '~/utils/misc'
+import { formatDistanceToNow } from 'date-fns'
 
+// Define the schema for a user search result
 const UserSearchResultSchema = z.object({
 	id: z.string(),
 	username: z.string(),
 	name: z.string().nullable(),
 	imageId: z.string().nullable(),
+	cloudinaryurl: z.string().nullable(),
+	updatedAt: z.date().nullable(),
 })
 
+// Define the schema for an array of user search results
 const UserSearchResultsSchema = z.array(UserSearchResultSchema)
 
-export async function loader({ request }: DataFunctionArgs) {
+// Loader function to fetch user search results
+export async function loader({ request }: LoaderFunctionArgs) {
 	const searchTerm = new URL(request.url).searchParams.get('search')
 	if (searchTerm === '') {
 		return redirect('/users')
 	}
-
 	const like = `%${searchTerm ?? ''}%`
-	const rawUsers = await prisma.$queryRaw`
-  SELECT "User"."id", "User"."username", "User"."name", "UserImage"."id" AS "imageId", MAX("Note"."updatedAt") AS "latestNoteUpdateTime"
-  FROM "User"
-  LEFT JOIN "UserImage" ON "UserImage"."userId" = "User"."id"
-  LEFT JOIN "Note" ON "Note"."ownerId" = "User"."id"
-  WHERE "User"."username" LIKE ${like}
-  OR "User"."name" LIKE ${like}
-  GROUP BY "User"."id", "User"."username", "User"."name", "UserImage"."id"
-  ORDER BY "latestNoteUpdateTime" DESC
-  LIMIT 50
-`
 
+	// Fetch user data from the database
+	const rawUsers = await prisma.$queryRaw`
+    SELECT
+      User.id,
+      User.username,
+      User.name,
+      UserImage.id AS imageId,
+      UserImage.cloudinaryurl AS cloudinaryurl,
+      UserImage.updatedAt
+    FROM
+      User
+    LEFT JOIN
+      UserImage ON UserImage.id = User.userImageid
+    LEFT JOIN
+      Note ON Note.ownerId = User.id
+    WHERE
+      User.username LIKE ${like}
+      OR User.name LIKE ${like}
+    GROUP BY
+      User.id, User.username, User.name, UserImage.id, UserImage.cloudinaryurl, UserImage.updatedAt
+    ORDER BY
+      UserImage.cloudinaryurl IS NULL, UserImage.cloudinaryurl
+    LIMIT
+      50
+  `
+
+	// Validate and parse the fetched user data
 	const result = UserSearchResultsSchema.safeParse(rawUsers)
 	if (!result.success) {
 		return json({ status: 'error', error: result.error.message } as const, {
 			status: 400,
 		})
 	}
+
+	// Return the parsed user data as JSON response
 	return json({ status: 'idle', users: result.data } as const)
 }
 
+// Component to render the user search results
 export default function UsersRoute() {
 	const data = useLoaderData<typeof loader>()
-
-	//data is loading ui
 	const fetcher = useFetcher()
 	const isLoadingData = fetcher.state === 'loading'
-
-	// when search a use show pending ui
 	const isPending = useDelayedIsPending({
 		formMethod: 'GET',
 		formAction: '/users',
 	})
 
 	return (
-		<div className="mb-auto">
+		<div>
 			<Spacer size="4xs" />
 			<div className="flex justify-between">
 				<h1 className="text-lg">Users:</h1>
@@ -78,13 +98,22 @@ export default function UsersRoute() {
 								<li key={user.id}>
 									<Link
 										to={user.username}
-										className="flex h-36 w-44 flex-col items-center justify-center rounded-lg bg-white px-5 py-3"
+										className="bg-secondary flex w-44 flex-col items-center justify-center rounded-lg px-5 py-3"
 									>
 										<img
 											alt={user.name ?? user.username}
-											src={getUserImgSrc(user.imageId)}
+											src={user.cloudinaryurl ?? ''}
 											className="h-16 w-16 rounded-full"
 										/>
+										{user.updatedAt ? (
+											<p className="text-sm">
+												{user.updatedAt
+													? formatDistanceToNow(new Date(user.updatedAt)) +
+														' ago'
+													: 'N/A'}
+											</p>
+										) : null}
+
 										{user.name ? (
 											<span className="w-full overflow-hidden text-ellipsis whitespace-nowrap text-center text-body-md">
 												{user.name}
@@ -106,8 +135,4 @@ export default function UsersRoute() {
 			</main>
 		</div>
 	)
-}
-
-export function ErrorBoundary() {
-	return <GeneralErrorBoundary />
 }

@@ -1,6 +1,7 @@
 import {
 	json,
-	type DataFunctionArgs,
+	type LoaderFunctionArgs,
+	type ActionFunctionArgs,
 	type MetaFunction,
 	redirect,
 	unstable_composeUploadHandlers as composeUploadHandlers,
@@ -10,7 +11,12 @@ import {
 import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
 import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { prisma } from '~/utils/db.server'
-import { getUserImgSrc, invariantResponse, useIsPending } from '~/utils/misc'
+import {
+	getUserImgSrc,
+	invariant,
+	invariantResponse,
+	useIsPending,
+} from '~/utils/misc'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { validateCSRF } from '~/utils/csrf.server'
 import { Button } from '~/components/ui/button'
@@ -20,16 +26,20 @@ import { StatusButton } from '~/components/ui/status-button'
 import { conform, useForm } from '@conform-to/react'
 import { getFieldsetConstraint, parse } from '@conform-to/zod'
 import { z } from 'zod'
+import { formatDistanceToNow } from 'date-fns'
 
 // --------------- loader -----------------
 
-export async function loader({ params }: DataFunctionArgs) {
+export async function loader({ params }: LoaderFunctionArgs) {
 	const user = await prisma.user.findFirst({
 		select: {
+			id: true,
 			name: true,
 			username: true,
 			createdAt: true,
-			image: { select: { id: true, cloudinaryurl: true } },
+			userImage: {
+				select: { id: true, cloudinaryurl: true, updatedAt: true },
+			},
 		},
 		where: {
 			username: params.username,
@@ -67,7 +77,7 @@ const MAX_UPLOAD_SIZE = 1024 * 1024 * 3 // 3MB
 
 // --------------- action -----------------
 
-export const action = async ({ request, params }: DataFunctionArgs) => {
+export const action = async ({ request, params }: ActionFunctionArgs) => {
 	console.log('------------------------------ started action -----------------')
 
 	invariantResponse(params.username, 'Username is required', { status: 400 })
@@ -113,24 +123,56 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
 		})
 	}
 	console.log('------------------------------ 2 -----------------')
+
 	const retrievedUser = await prisma.user.findUnique({
 		where: {
 			username: params.username,
 		},
+		select: {
+			id: true,
+			userImage: true,
+		},
 	})
 
-	await prisma.userImage.update({
-		where: {
-			userId: retrievedUser?.id,
-		},
-		data: {
-			cloudinaryurl: img,
-		},
-	})
-	console.log(
-		'------------------------------ ended action -----------------',
-		img,
-	)
+	if (retrievedUser) {
+		const userImageId = retrievedUser.userImage
+		if (userImageId) {
+			// If user has userImageId, update the associated userImage
+			await prisma.userImage.upsert({
+				where: {
+					id: userImageId.id,
+				},
+				update: {
+					cloudinaryurl: img,
+				},
+				create: {
+					id: userImageId.id,
+					cloudinaryurl: img,
+					createdAt: new Date(),
+				},
+			})
+		} else {
+			// If user doesn't have userImageId, create a new userImage
+			const newUserImage = await prisma.userImage.create({
+				data: {
+					cloudinaryurl: img,
+					createdAt: new Date(),
+				},
+			})
+			console.log(userImageId, 'here you ------------ go')
+			// Update the user with the newly created userImage's id
+			await prisma.user.update({
+				where: {
+					id: retrievedUser.id,
+				},
+				data: {
+					userImageId: newUserImage.id,
+				},
+			})
+		}
+	} else {
+		console.log('User not found')
+	}
 
 	return redirect(`/users/${params.username}`)
 }
@@ -154,8 +196,47 @@ export default function UserRoute() {
 	})
 
 	return (
-		<div className="">
-			<div className="my-8 flex justify-end">
+		<div className=" flex justify-between">
+			<div className="w-full mb-auto flex items-center">
+				{/* <h1 className="m-4">
+					user profile: {data.user.name ?? data.user.username}
+				</h1> */}
+				<div className="relative">
+					<img
+						src={data.user.userImage?.cloudinaryurl ?? ''}
+						alt={userDisplayName}
+						className="h-52 w-52 rounded-full object-cover"
+					/>
+					<p>
+						{data.user.userImage?.updatedAt
+							? formatDistanceToNow(new Date(data.user.userImage?.updatedAt)) +
+								' ago'
+							: null}
+					</p>
+				</div>
+
+				<Link
+					to={`/users/${data.user.username}`}
+					className=" px-4 shadow-sm rounded-lg overflow-hidden text-lg font-bold bg-muted text-gray-100 transition duration-200 ease-in-out"
+				>
+					{userDisplayName}
+				</Link>
+				<p className="mt-2 text-muted-foreground">
+					Joined {data.userJoinedDisplay}
+				</p>
+			</div>
+			<div>
+				<div className="pb-4">
+					<Link
+						to={`/users/${data.user.username}/notes`}
+						className="bg-muted shadow-sm rounded-lg overflow-hidden text-lg font-bold  hover:transition duration-200 ease-in-out"
+					>
+						{userDisplayName} Notes
+					</Link>
+				</div>
+			</div>
+
+			<div className="">
 				<Form method="post" encType="multipart/form-data" {...form.props}>
 					<AuthenticityTokenInput />
 					<label htmlFor={fields.img.id}></label>
@@ -177,39 +258,6 @@ export default function UserRoute() {
 					</StatusButton>
 					<div>{form.error}</div>
 				</Form>
-			</div>
-
-			<div className="w-full mb-auto flex items-center">
-				{/* <h1 className="m-4">
-					user profile: {data.user.name ?? data.user.username}
-				</h1> */}
-				<div className="relative">
-					<img
-						src={data.user.image?.cloudinaryurl ?? ''}
-						alt={userDisplayName}
-						className="h-52 w-52 rounded-full object-cover"
-					/>
-				</div>
-
-				<Link
-					to={`/users/${data.user.username}`}
-					className=" px-4 shadow-sm rounded-lg overflow-hidden text-lg font-bold bg-gray-600 text-gray-100 transition duration-200 ease-in-out"
-				>
-					{userDisplayName}
-				</Link>
-				<p className="mt-2 text-muted-foreground">
-					Joined {data.userJoinedDisplay}
-				</p>
-			</div>
-			<div>
-				<div className="pb-4">
-					<Link
-						to={`/users/${data.user.username}/notes`}
-						className="shadow-sm rounded-lg overflow-hidden bg-white text-lg font-bold hover:bg-gray-600 hover:text-gray-100 transition duration-200 ease-in-out"
-					>
-						{userDisplayName} Notes
-					</Link>
-				</div>
 			</div>
 		</div>
 	)

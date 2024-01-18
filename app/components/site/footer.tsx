@@ -2,9 +2,14 @@
 
 export default function Footer() {
 	return (
-		<footer className="bg-white py-4">
-			<div className="mx-auto px-4">
-				<p className=" text-black text-center">Footer</p>
+		<footer className="py-4 bg-header">
+			<div className="max-w-4xl flex flex-col mx-auto px-4">
+				<div className="flex justify-between items-center text-headertext">
+					<div>
+						<p className="">copyright</p>
+					</div>
+					<div>footer</div>
+				</div>
 			</div>
 		</footer>
 	)
