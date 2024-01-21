@@ -2,6 +2,7 @@ import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 import { prisma } from '~/utils/db.server'
 import { invariantResponse } from '~/utils/misc'
+import { GeneralErrorBoundary } from '~/components/error-boundary'
 
 export async function loader({ params }: LoaderFunctionArgs) {
 	const note = await prisma.note.findFirst({
@@ -26,5 +27,17 @@ export default function NoteTestId() {
 			<h5>noteid: {data.note.id}</h5>
 			<div>content: {data.note.content}</div>
 		</div>
+	)
+}
+
+export function ErrorBoundary() {
+	return (
+		<GeneralErrorBoundary
+			statusHandlers={{
+				404: ({ params }) => {
+					return <p>No note with the id {params.noteId} exists</p>
+				},
+			}}
+		/>
 	)
 }

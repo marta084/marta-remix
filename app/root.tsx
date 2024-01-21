@@ -17,7 +17,6 @@ import {
 	useFetcher,
 	useFetchers,
 	useLoaderData,
-	useMatches,
 } from '@remix-run/react'
 import { HoneypotProvider } from 'remix-utils/honeypot/react'
 import { AuthenticityTokenProvider } from 'remix-utils/csrf/react'
@@ -29,7 +28,6 @@ import { csrf } from '~/utils/csrf.server'
 import tailwindStyleSheet from './styles/tailwind.css'
 import './styles/global.css'
 import rdtStylesheet from 'remix-development-tools/index.css'
-import fontstyleSheet from './styles/font.css'
 
 import Footer from './components/site/footer'
 import Header from './components/site/header'
@@ -41,7 +39,6 @@ import { z } from 'zod'
 import { combineHeaders, invariantResponse } from './utils/misc'
 import { parse } from '@conform-to/zod'
 import { useForm } from '@conform-to/react'
-import { Icon } from './components/ui/icon'
 import { ErrorList } from './components/forms'
 import { toastSessionStorage } from './utils/toast.server'
 import { Toaster, toast as showToast } from 'sonner'
@@ -239,7 +236,7 @@ function ThemeSwitch({ userPreference }: { userPreference?: Theme }) {
 	)
 }
 
-function ShowToast({ toast }: { toast: any }) {
+function ShowToast({ toast }: { toast: unknown }) {
 	const { id, type, title, description } = toast as {
 		id: string
 		type: 'success' | 'message'

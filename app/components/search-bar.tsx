@@ -4,15 +4,17 @@ import { Input } from './ui/input'
 import { Label } from './ui/label'
 import { StatusButton } from './ui/status-button'
 
+type SearchBarProps = Readonly<{
+	status: 'idle' | 'pending' | 'success' | 'error'
+	autoFocus?: boolean
+	autoSubmit?: boolean
+}>
+
 export function SearchBar({
 	status,
 	autoFocus = false,
 	autoSubmit = false,
-}: {
-	status: 'idle' | 'pending' | 'success' | 'error'
-	autoFocus?: boolean
-	autoSubmit?: boolean
-}) {
+}: SearchBarProps) {
 	const id = 'search-input'
 	const [searchParams] = useSearchParams()
 	const submit = useSubmit()
@@ -43,6 +45,7 @@ export function SearchBar({
 					defaultValue={searchParams.get('search') ?? ''}
 					placeholder="Search"
 					className="w-full text-black"
+					// eslint-disable-next-line jsx-a11y/no-autofocus
 					autoFocus={autoFocus}
 				/>
 			</div>

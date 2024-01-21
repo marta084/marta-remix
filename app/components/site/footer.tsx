@@ -1,4 +1,6 @@
 // footer.tsx
+// TODO: this is footer component
+// FIXME: FIX ME PLEASE
 
 export default function Footer() {
 	return (

@@ -1,15 +1,11 @@
-import {
-	type LoaderFunctionArgs,
-	type ActionFunctionArgs,
-	json,
-} from '@remix-run/node'
+import { type LoaderFunctionArgs, json } from '@remix-run/node'
 import { NavLink, useLoaderData } from '@remix-run/react'
 import { z } from 'zod'
 import { prisma } from '~/utils/db.server'
 import { cn } from '~/utils/misc'
 
 const NotesSchema = z.object({
-	id: z.string().nullable(),
+	id: z.string(),
 	title: z.string().nullable(),
 })
 

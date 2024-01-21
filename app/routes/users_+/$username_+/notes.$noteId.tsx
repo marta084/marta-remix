@@ -1,10 +1,9 @@
 import {
-	type DataFunctionArgs,
 	json,
 	type MetaFunction,
 	redirect,
-	ActionFunctionArgs,
-	LoaderFunctionArgs,
+	type ActionFunctionArgs,
+	type LoaderFunctionArgs,
 } from '@remix-run/node'
 import { Form, Link, useLoaderData } from '@remix-run/react'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
@@ -13,7 +12,7 @@ import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { Button } from '~/components/ui/button'
 import { StatusButton } from '~/components/ui/status-button'
 import { prisma } from '~/utils/db.server'
-import { getNoteImgSrc, invariantResponse, useIsPending } from '~/utils/misc'
+import { invariantResponse, useIsPending } from '~/utils/misc'
 import { type loader as NoteLoader } from './notes'
 import { Toaster, toast as showToast } from 'sonner'
 
