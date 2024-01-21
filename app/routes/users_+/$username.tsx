@@ -11,17 +11,11 @@ import {
 import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
 import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { prisma } from '~/utils/db.server'
-import {
-	getUserImgSrc,
-	invariant,
-	invariantResponse,
-	useIsPending,
-} from '~/utils/misc'
+import { invariantResponse, useIsPending } from '~/utils/misc'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { validateCSRF } from '~/utils/csrf.server'
-import { Button } from '~/components/ui/button'
 import { uploadImage } from '~/utils/cloudinary.server'
-import { useState } from 'react'
+
 import { StatusButton } from '~/components/ui/status-button'
 import { conform, useForm } from '@conform-to/react'
 import { getFieldsetConstraint, parse } from '@conform-to/zod'
@@ -239,7 +233,7 @@ export default function UserRoute() {
 			<div className="">
 				<Form method="post" encType="multipart/form-data" {...form.props}>
 					<AuthenticityTokenInput />
-					<label htmlFor={fields.img.id}></label>
+					<label htmlFor={fields.img.id}>Image upload:</label>
 					<input type="file" {...conform.input(fields.img)} />
 
 					{fields.img.errors ? (

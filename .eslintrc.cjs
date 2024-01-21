@@ -21,7 +21,7 @@ module.exports = {
 	},
 
 	// Base config
-	extends: ['eslint:recommended', '@remix-run/eslint-config', 'kentcdodds'],
+	extends: ['eslint:recommended', '@remix-run/eslint-config'],
 
 	overrides: [
 		// React

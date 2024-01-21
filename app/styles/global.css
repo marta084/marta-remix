@@ -1,3 +1,20 @@
 .header-bb {
 	border-bottom: 4px solid #fb0;
 }
+
+::-webkit-scrollbar {
+	width: 12px;
+}
+
+::-webkit-scrollbar-thumb {
+	background-color: #4a5568; /* Change the color as needed */
+	border-radius: 6px;
+}
+
+::-webkit-scrollbar-track {
+	background-color: #cbd5e0; /* Change the color as needed */
+}
+
+/* For Firefox */
+scrollbar-color: #4a5568 #cbd5e0;
+scrollbar-width: thin;

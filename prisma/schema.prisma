@@ -21,13 +21,14 @@ model User {
 }
 
 model Note {
-  id        String   @id @default(value: cuid())
+  id        String      @id @default(value: cuid())
   title     String
   content   String
   createdAt DateTime
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime    @updatedAt
   ownerId   String?
-  owner     User?    @relation(onDelete: Cascade, onUpdate: Cascade, fields: [ownerId], references: [id])
+  owner     User?       @relation(onDelete: Cascade, onUpdate: Cascade, fields: [ownerId], references: [id])
+  noteImage NoteImage[]
 
   @@index(fields: [ownerId])
 }
@@ -39,7 +40,8 @@ model NoteImage {
   cloudinaryURL String?
   createdAt     DateTime
   updatedAt     DateTime @updatedAt
-  noteId        String
+  noteId        String?
+  note          Note?    @relation(onDelete: Cascade, onUpdate: Cascade, fields: [noteId], references: [id])
 
   @@index(fields: [noteId])
 }

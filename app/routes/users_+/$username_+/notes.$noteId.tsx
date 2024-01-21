@@ -3,6 +3,8 @@ import {
 	json,
 	type MetaFunction,
 	redirect,
+	ActionFunctionArgs,
+	LoaderFunctionArgs,
 } from '@remix-run/node'
 import { Form, Link, useLoaderData } from '@remix-run/react'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
@@ -13,34 +15,28 @@ import { StatusButton } from '~/components/ui/status-button'
 import { prisma } from '~/utils/db.server'
 import { getNoteImgSrc, invariantResponse, useIsPending } from '~/utils/misc'
 import { type loader as NoteLoader } from './notes'
+import { Toaster, toast as showToast } from 'sonner'
 
-export async function loader({ params }: DataFunctionArgs) {
+export async function loader({ params }: LoaderFunctionArgs) {
 	const note = await prisma.note.findFirst({
 		where: { id: params.noteId },
 		select: {
 			title: true,
 			content: true,
-			images: {
-				select: { id: true, altText: true },
-			},
 		},
 	})
-
 	invariantResponse(note, 'Note not found', { status: 404 })
 	return json({
 		note,
 	})
 }
 
-export async function action({ request, params }: DataFunctionArgs) {
+export async function action({ request, params }: ActionFunctionArgs) {
 	invariantResponse(params.noteId, 'noteId param is required')
-
 	const formData = await request.formData()
 	await validateCSRF(formData, request.headers)
 	const intent = formData.get('intent')
-
 	invariantResponse(intent === 'delete', 'Invalid intent')
-
 	await prisma.note.delete({ where: { id: params.noteId } })
 	return redirect(`/users/${params.username}/notes`)
 }
@@ -48,29 +44,13 @@ export async function action({ request, params }: DataFunctionArgs) {
 export default function SingleNoteRoute() {
 	const data = useLoaderData<typeof loader>()
 	const isPending = useIsPending()
-
 	return (
 		<div className=" flex-col px-8">
 			<h2 className="mb-2 pt-2 text-h2">{data.note.title}</h2>
-
 			<div className="overflow-y-auto">
-				<ul className="flex flex-wrap gap-5 py-5">
-					{data.note.images.map(image => (
-						<li key={image.id}>
-							<a href={getNoteImgSrc(image.id)}>
-								<img
-									src={getNoteImgSrc(image.id)}
-									alt={image.altText ?? ''}
-									className="h-32 w-32 rounded-lg object-cover"
-								/>
-							</a>
-						</li>
-					))}
-				</ul>
 				<p className="whitespace-break-spaces text-sm md:text-lg">
 					{data.note.content}
 				</p>
-
 				<div className="mt-4 w-48 flex justify-between">
 					<div>
 						<Button
@@ -109,7 +89,6 @@ export const meta: MetaFunction<
 	const NoteMatch = matches.find(
 		m => m.id === 'routes/users_+/$username_+/notes',
 	)
-
 	const displayName = NoteMatch?.data.owner.name ?? params.username
 	const noteTitle = data?.note.title ?? 'Note'
 	return [
