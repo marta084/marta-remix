@@ -1,11 +1,11 @@
 # base node image
-FROM node:18-bullseye-slim as base
+FROM node:18-bullseye-slim AS base
 
 # Install openssl for Prisma
 RUN apt-get update && apt-get install -y openssl
 
 # Install all node_modules, including dev dependencies
-FROM base as deps
+FROM base AS deps
 
 RUN mkdir /app
 WORKDIR /app
@@ -14,7 +14,7 @@ ADD package.json package-lock.json ./
 RUN npm install
 
 # Setup production node_modules
-FROM base as production-deps
+FROM base AS production-deps
 
 RUN mkdir /app
 WORKDIR /app
@@ -24,7 +24,7 @@ ADD package.json package-lock.json ./
 RUN npm prune --production
 
 # Build the app
-FROM base as build
+FROM base AS build
 
 ENV NODE_ENV=production
 
