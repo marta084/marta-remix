@@ -7,6 +7,7 @@ import {
 	type LinksFunction,
 	type MetaFunction,
 } from '@remix-run/node'
+
 import {
 	Links,
 	LiveReload,
@@ -18,6 +19,7 @@ import {
 	useFetchers,
 	useLoaderData,
 } from '@remix-run/react'
+
 import { HoneypotProvider } from 'remix-utils/honeypot/react'
 import { AuthenticityTokenProvider } from 'remix-utils/csrf/react'
 import MartaBlogFavicon from './assets/favicon.ico'
@@ -33,6 +35,7 @@ import Footer from './components/site/footer'
 import Header from './components/site/header'
 import { getEnv } from './utils/env.server'
 import { honeypot } from './utils/honeypot.server'
+import { Toaster, toast as showToast } from 'sonner'
 
 import { getTheme, setTheme, type Theme } from './utils/theme.server'
 import { z } from 'zod'
@@ -40,8 +43,7 @@ import { combineHeaders, invariantResponse } from './utils/misc'
 import { parse } from '@conform-to/zod'
 import { useForm } from '@conform-to/react'
 import { ErrorList } from './components/forms'
-import { toastSessionStorage } from './utils/toast.server'
-import { Toaster, toast as showToast } from 'sonner'
+import { toastSessionStorage } from '~/utils/toast.server'
 
 import { useEffect } from 'react'
 import { Spacer } from './components/spacer'
@@ -72,9 +74,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			theme: getTheme(request),
 			toast,
 			ENV: getEnv(),
-
-			honeyProps,
 			csrfToken,
+			honeyProps,
 		},
 		{
 			headers: combineHeaders(
@@ -119,10 +120,10 @@ export async function action({ request }: ActionFunctionArgs) {
 function Document({
 	children,
 	theme,
-}: {
+}: Readonly<{
 	children: React.ReactNode
 	theme?: Theme
-}) {
+}>) {
 	return (
 		<html lang="en" className={`${theme} h-full overflow-x-hidden`}>
 			<head>
@@ -144,10 +145,29 @@ function Document({
 				</div>
 
 				{children}
+
+				<Toaster
+					expand
+					visibleToasts={90}
+					toastOptions={{
+						unstyled: true,
+						classNames: {
+							toast: '',
+							title: 'text-red-400',
+							description: 'text-red-400',
+							actionButton: 'bg-zinc-400',
+							cancelButton: 'bg-white',
+							closeButton: 'bg-grey-400',
+						},
+					}}
+					closeButton
+					position="bottom-right"
+					dir="rtl"
+				/>
+
 				<ScrollRestoration />
 				<Scripts />
 				<LiveReload />
-				<Toaster closeButton position="top-center" />
 			</body>
 		</html>
 	)
@@ -200,7 +220,7 @@ function useTheme() {
 	return data.theme
 }
 
-function ThemeSwitch({ userPreference }: { userPreference?: Theme }) {
+function ThemeSwitch({ userPreference }: Readonly<{ userPreference?: Theme }>) {
 	const fetcher = useFetcher<typeof action>()
 
 	const [form] = useForm({
@@ -236,7 +256,7 @@ function ThemeSwitch({ userPreference }: { userPreference?: Theme }) {
 	)
 }
 
-function ShowToast({ toast }: { toast: unknown }) {
+function ShowToast({ toast }: { toast: any }) {
 	const { id, type, title, description } = toast as {
 		id: string
 		type: 'success' | 'message'

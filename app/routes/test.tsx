@@ -49,6 +49,7 @@ export default function Testload() {
 					)}
 				</ul>
 			</div>
+			<div>hola amigo</div>
 		</div>
 	)
 }

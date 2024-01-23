@@ -21,11 +21,13 @@ export async function loader({ params }: LoaderFunctionArgs) {
 
 export default function NoteTestId() {
 	const data = useLoaderData<typeof loader>()
+
 	return (
 		<div>
-			<h1>title: {data.note.title}</h1>
-			<h5>noteid: {data.note.id}</h5>
-			<div>content: {data.note.content}</div>
+			<h1 className="text-bold text-lg bg-headertext text-white text-header">
+				Title: {data.note.title}
+			</h1>
+			<div>Content: {data.note.content}</div>
 		</div>
 	)
 }
