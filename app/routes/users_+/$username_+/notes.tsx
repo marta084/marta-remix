@@ -74,6 +74,9 @@ export default function NotesRoute() {
 			</h1>
 			<div className="grid w-full grid-cols-4 bg-muted pl-2 md:container md:rounded-3xl md:pr-0">
 				<div className="relative col-span-1 border-2 mr-2 border-gray-450">
+					<div>
+						<Link to="new">Create new note</Link>
+					</div>
 					<ul className="overflow-y-auto overflow-x-hidden pb-12">
 						{data.owner.notes && data.owner.notes.length > 0 ? (
 							data.owner.notes?.map(note => (
