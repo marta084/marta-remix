@@ -150,7 +150,7 @@ function Document({
 					expand
 					visibleToasts={90}
 					toastOptions={{
-						unstyled: true,
+						unstyled: false,
 						classNames: {
 							toast: '',
 							title: 'text-red-400',
