@@ -4,8 +4,7 @@
 node_modules
 .DS_store
 
-/prisma/migrations/
-/prisma/dev.db
+
 /prisma/seed.ts
 
 /build
@@ -18,7 +17,7 @@ tsconfig.tsbuildinfo
 
 # normally you don't commit your database, but we're doing it here for the workshop
 # /prisma/data.db
-/prisma/data.db-journal
+
 /tests/prisma
 
 /test-results/
@@ -27,7 +26,7 @@ tsconfig.tsbuildinfo
 /tests/fixtures/email/
 /coverage
 
-/other/cache.db
+
 
 # Easy way to create temporary files/folders that won't accidentally be added to git
 *.local.*
