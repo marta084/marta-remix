@@ -97,7 +97,7 @@ export default function NotesRoute() {
 						)}
 					</ul>
 				</div>
-				<div className="relative col-span-3 bg-accent border-2 border-red-500 p-4 mr-2">
+				<div className="relative col-span-3 bg-accent p-4 mr-2">
 					<Outlet />
 				</div>
 			</div>
