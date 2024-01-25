@@ -6,6 +6,12 @@ node_modules
 
 
 /prisma/seed.ts
+/prisma/dev.db
+/prisma/dev.db-journal
+
+replica.db
+replica.db-wal
+replica.db-shm
 
 /build
 /public/build
@@ -38,3 +44,4 @@ tsconfig.tsbuildinfo
 # /app/components/ui/icon.svg
 # /app/components/ui/icon.tsx
 prisma/seed.ts
+
