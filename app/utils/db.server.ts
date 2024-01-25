@@ -4,20 +4,13 @@ import { createClient } from '@libsql/client'
 import { performance } from 'perf_hooks'
 import * as util from 'util'
 
-const libsql = createClient({
-	url: 'file:replica.db',
-	syncUrl: process.env.TURSO_DATABASE_URL,
-	authToken: process.env.TURSO_AUTH_TOKEN,
-})
-
-const adapter = new PrismaLibSQL(libsql)
-
-async function sync() {
-	return libsql.sync()
-}
-
 const prismaClientSingleton = () => {
-	sync()
+	const libsql = createClient({
+		url: process.env.TURSO_DATABASE_URL!,
+		authToken: process.env.TURSO_AUTH_TOKEN,
+	})
+	const adapter = new PrismaLibSQL(libsql)
+
 	return new PrismaClient({ adapter }).$extends({
 		/**
 		 * Query logging Client extension
