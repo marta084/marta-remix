@@ -5,7 +5,7 @@ node_modules
 .DS_store
 
 /prisma/migrations/
-/prisma/dev.db
+
 /prisma/seed.ts
 
 /build
