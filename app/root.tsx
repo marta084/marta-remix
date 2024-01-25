@@ -256,7 +256,7 @@ function ThemeSwitch({ userPreference }: Readonly<{ userPreference?: Theme }>) {
 	)
 }
 
-function ShowToast({ toast }: { toast: any }) {
+function ShowToast({ toast }: { toast: unknown }) {
 	const { id, type, title, description } = toast as {
 		id: string
 		type: 'success' | 'message'

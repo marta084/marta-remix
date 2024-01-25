@@ -3,7 +3,7 @@ import type { LoaderFunctionArgs } from '@remix-run/node'
 import { Link, useFetcher, useLoaderData } from '@remix-run/react'
 import { z } from 'zod'
 import { Spacer } from '~/components/spacer'
-import { prisma } from '~/utils/db.server'
+import prisma from '~/utils/db.server'
 import { cn, useDelayedIsPending } from '~/utils/misc'
 import { formatDistanceToNow } from 'date-fns'
 

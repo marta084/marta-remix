@@ -1,41 +1,56 @@
 import { PrismaClient } from '@prisma/client'
-import chalk from 'chalk'
-import { singleton } from './singleton.server'
+import { PrismaLibSQL } from '@prisma/adapter-libsql'
+import { createClient } from '@libsql/client'
+import { performance } from 'perf_hooks'
+import * as util from 'util'
 
-const prisma = singleton('prisma', () => {
-	// NOTE: if you change anything in this function you'll need to restart
-	// the dev server to see your changes.
-
-	// we'll set the logThreshold to 0 so you see all the queries, but in a
-	// production app you'd probably want to fine-tune this value to something
-	// you're more comfortable with.
-	const logThreshold = 0
-
-	const client = new PrismaClient({
-		log: [
-			{ level: 'query', emit: 'event' },
-			{ level: 'error', emit: 'stdout' },
-			{ level: 'info', emit: 'stdout' },
-			{ level: 'warn', emit: 'stdout' },
-		],
-	})
-	client.$on('query', async e => {
-		if (e.duration < logThreshold) return
-		const color =
-			e.duration < logThreshold * 1.1
-				? 'green'
-				: e.duration < logThreshold * 1.2
-					? 'blue'
-					: e.duration < logThreshold * 1.3
-						? 'yellow'
-						: e.duration < logThreshold * 1.4
-							? 'redBright'
-							: 'red'
-		const dur = chalk[color](`${e.duration}ms`)
-		console.info(`prisma:query - ${dur} - ${e.query}`)
-	})
-	client.$connect()
-	return client
+const libsql = createClient({
+	url: 'file:replica.db',
+	syncUrl: process.env.TURSO_DATABASE_URL,
+	authToken: process.env.TURSO_AUTH_TOKEN,
 })
 
-export { prisma }
+const adapter = new PrismaLibSQL(libsql)
+
+async function sync() {
+	return libsql.sync()
+}
+
+const prismaClientSingleton = () => {
+	sync()
+	return new PrismaClient({ adapter }).$extends({
+		/**
+		 * Query logging Client extension
+		 * Source: https://github.com/prisma/prisma-client-extensions/tree/main/query-logging
+		 */
+		query: {
+			$allModels: {
+				async $allOperations({ operation, model, args, query }) {
+					const start = performance.now()
+					const result = await query(args)
+					const end = performance.now()
+					const time = end - start
+					console.log(
+						util.inspect(
+							{ model, operation, time, args },
+							{ showHidden: false, depth: null, colors: true },
+						),
+					)
+					return result
+				},
+			},
+		},
+	})
+}
+
+type PrismaClientSingleton = ReturnType<typeof prismaClientSingleton>
+
+const globalForPrisma = globalThis as unknown as {
+	prisma: PrismaClientSingleton | undefined
+}
+
+const prisma = globalForPrisma.prisma ?? prismaClientSingleton()
+
+export default prisma
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma

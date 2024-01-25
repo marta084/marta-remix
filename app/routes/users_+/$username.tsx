@@ -10,7 +10,7 @@ import {
 } from '@remix-run/node'
 import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
 import { GeneralErrorBoundary } from '~/components/error-boundary'
-import { prisma } from '~/utils/db.server'
+import prisma from '~/utils/db.server'
 import { invariantResponse, useIsPending } from '~/utils/misc'
 import { AuthenticityTokenInput } from 'remix-utils/csrf/react'
 import { validateCSRF } from '~/utils/csrf.server'

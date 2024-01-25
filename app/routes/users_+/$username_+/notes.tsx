@@ -1,8 +1,8 @@
 import { json, type DataFunctionArgs, type MetaFunction } from '@remix-run/node'
 import { Link, NavLink, Outlet, useLoaderData } from '@remix-run/react'
 import { z } from 'zod'
-import { prisma } from '~/utils/db.server'
-import { cn, getUserImgSrc, invariantResponse } from '~/utils/misc'
+import prisma from '~/utils/db.server'
+import { cn, invariantResponse } from '~/utils/misc'
 
 const UserSchema = z.object({
 	name: z.string().nullable(),

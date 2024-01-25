@@ -18,7 +18,9 @@ import { ErrorList, Field, TextareaField } from '~/components/forms'
 import { Button } from '~/components/ui/button'
 import { StatusButton } from '~/components/ui/status-button'
 import { validateCSRF } from '~/utils/csrf.server'
-import { prisma } from '~/utils/db.server'
+import prisma from '~/utils/db.server'
+import { useIsPending } from '~/utils/misc'
+import { toastSessionStorage } from '~/utils/toast.server'
 
 const titleMinLength = 1
 const titleMaxLength = 100
@@ -74,8 +76,24 @@ export async function action({ request, params }: ActionFunctionArgs) {
 		},
 	})
 
+	const toastCookieSession = await toastSessionStorage.getSession(
+		request.headers.get('cookie'),
+	)
+	toastCookieSession.flash('toast', {
+		id: noteId,
+		type: 'success',
+		title: 'Add success',
+		description: 'Your note has been add/updated',
+	})
+
 	return redirect(
 		`/users/${updatedNote.owner?.username}/notes/${updatedNote.id}`,
+		{
+			headers: {
+				'set-cookie':
+					await toastSessionStorage.commitSession(toastCookieSession),
+			},
+		},
 	)
 }
 
@@ -85,7 +103,7 @@ export function NoteEditor({
 	note?: SerializeFrom<Pick<Note, 'id' | 'title' | 'content'>>
 }) {
 	const noteFetcher = useFetcher<typeof action>()
-	const isPending = noteFetcher.state !== 'idle'
+	const isPending = useIsPending()
 
 	const [form, fields] = useForm({
 		id: 'note-editor',

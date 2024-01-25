@@ -1,7 +1,7 @@
 import { type LoaderFunctionArgs, json } from '@remix-run/node'
 import { NavLink, useLoaderData } from '@remix-run/react'
 import { z } from 'zod'
-import { prisma } from '~/utils/db.server'
+import prisma from '~/utils/db.server'
 import { cn } from '~/utils/misc'
 
 const NotesSchema = z.object({

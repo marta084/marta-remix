@@ -1,5 +1,5 @@
 import { type DataFunctionArgs } from '@remix-run/node'
-import { prisma } from '~/utils/db.server'
+import prisma from '~/utils/db.server'
 import { invariantResponse } from '~/utils/misc'
 
 export async function loader({ params }: DataFunctionArgs) {
