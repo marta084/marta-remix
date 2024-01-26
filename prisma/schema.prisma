@@ -56,3 +56,4 @@ model UserImage {
   updatedAt     DateTime @updatedAt
   user          User?
 }
+

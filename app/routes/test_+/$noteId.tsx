@@ -24,7 +24,7 @@ export default function NoteTestId() {
 
 	return (
 		<div>
-			<h1 className="text-bold text-lg bg-headertext text-white text-header">
+			<h1 className="text-bold text-lg bg-headertext text-header">
 				Title: {data.note.title}
 			</h1>
 			<div>Content: {data.note.content}</div>
