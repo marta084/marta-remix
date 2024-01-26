@@ -99,9 +99,9 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
 export function NoteEditor({
 	note,
-}: {
+}: Readonly<{
 	note?: SerializeFrom<Pick<Note, 'id' | 'title' | 'content'>>
-}) {
+}>) {
 	const noteFetcher = useFetcher<typeof action>()
 	const isPending = useIsPending()
 

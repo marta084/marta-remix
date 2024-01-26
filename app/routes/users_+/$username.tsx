@@ -81,9 +81,9 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 			if (name !== 'img') {
 				return undefined
 			}
-			console.log(filename)
+			// console.log(filename)
 			const uploadedImage = await uploadImage(data)
-			console.log(uploadedImage)
+			// console.log(uploadedImage)
 			return uploadedImage.secure_url
 		},
 		createMemoryUploadHandler({ maxPartSize: MAX_UPLOAD_SIZE }),
@@ -183,7 +183,7 @@ export default function UserRoute() {
 	const [form, fields] = useForm({
 		id: 'img-upload',
 		constraint: getFieldsetConstraint(formSchema),
-		lastSubmission: (actionData as { submission?: any })?.submission,
+		lastSubmission: (actionData as { submission?: never })?.submission,
 		onValidate({ formData }) {
 			return parse(formData, { schema: formSchema })
 		},

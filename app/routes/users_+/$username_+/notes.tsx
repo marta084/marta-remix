@@ -1,4 +1,8 @@
-import { json, type DataFunctionArgs, type MetaFunction } from '@remix-run/node'
+import {
+	json,
+	type LoaderFunctionArgs,
+	type MetaFunction,
+} from '@remix-run/node'
 import { Link, NavLink, Outlet, useLoaderData } from '@remix-run/react'
 import { z } from 'zod'
 import prisma from '~/utils/db.server'
@@ -23,7 +27,7 @@ const UserSchema = z.object({
 		.nullable(),
 })
 
-export async function loader({ params }: DataFunctionArgs) {
+export async function loader({ params }: LoaderFunctionArgs) {
 	const owner = await prisma.user.findFirst({
 		select: {
 			name: true,
