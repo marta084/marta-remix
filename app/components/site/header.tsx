@@ -1,6 +1,7 @@
 import { Link, NavLink, useMatches } from '@remix-run/react'
 import { SearchBar } from '~/components/search-bar'
 import { cn } from '~/utils/misc'
+import { Button } from '../ui/button'
 
 export default function Header() {
 	const matches = useMatches()
@@ -42,12 +43,8 @@ export default function Header() {
 								<SearchBar status="idle" />
 							</div>
 						)}
-						{/* <Link className="text-lg mx-2" to="/signup">
-							Login
-						</Link>
-						<Link className="text-lg mx-2" to="/signup">
-							Sign up
-						</Link> */}
+
+						<Button>Login</Button>
 					</div>
 				</div>
 			</div>

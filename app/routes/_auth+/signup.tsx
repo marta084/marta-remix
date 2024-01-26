@@ -1,7 +1,7 @@
 import {
 	redirect,
-	type DataFunctionArgs,
 	type MetaFunction,
+	type ActionFunctionArgs,
 } from '@remix-run/node'
 import { Form } from '@remix-run/react'
 import { Button } from '~/components/ui/button'
@@ -9,8 +9,13 @@ import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import { HoneypotInputs } from 'remix-utils/honeypot/react'
 import { checkHoneypot } from '~/utils/honeypot.server'
+import { z } from 'zod'
 
-export async function action({ request }: DataFunctionArgs) {
+const loginSchema = z.object({
+	email: z.string().email(),
+})
+
+export async function action({ request }: ActionFunctionArgs) {
 	const formData = await request.formData()
 	checkHoneypot(formData)
 	// we'll implement signup later
