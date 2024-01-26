@@ -45,3 +45,6 @@ tsconfig.tsbuildinfo
 # /app/components/ui/icon.tsx
 prisma/seed.ts
 
+replica.db-shm
+*.db-shm
+*.db-wal
