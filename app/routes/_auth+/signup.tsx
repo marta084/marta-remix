@@ -11,10 +11,6 @@ import { HoneypotInputs } from 'remix-utils/honeypot/react'
 import { checkHoneypot } from '~/utils/honeypot.server'
 import { z } from 'zod'
 
-const loginSchema = z.object({
-	email: z.string().email(),
-})
-
 export async function action({ request }: ActionFunctionArgs) {
 	const formData = await request.formData()
 	checkHoneypot(formData)

@@ -43,8 +43,9 @@ export default function Header() {
 								<SearchBar status="idle" />
 							</div>
 						)}
-
-						<Button>Login</Button>
+						<Link to="login">
+							<Button type="button">Login</Button>
+						</Link>
 					</div>
 				</div>
 			</div>
