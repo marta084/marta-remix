@@ -9,9 +9,7 @@ node_modules
 /prisma/dev.db
 /prisma/dev.db-journal
 
-replica.db
-replica.db-wal
-replica.db-shm
+
 
 /build
 /public/build
