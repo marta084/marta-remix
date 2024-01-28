@@ -5,7 +5,7 @@ import { performance } from 'perf_hooks'
 import * as util from 'util'
 
 const libsql = createClient({
-	url: 'file:./replica.db',
+	url: 'file:replica.db',
 	syncUrl: process.env.TURSO_DATABASE_URL,
 	authToken: process.env.TURSO_AUTH_TOKEN,
 })
@@ -26,7 +26,6 @@ const prismaClientSingleton = () => {
 		query: {
 			$allModels: {
 				async $allOperations({ operation, model, args, query }) {
-					sync()
 					const start = performance.now()
 					const result = await query(args)
 					const end = performance.now()
